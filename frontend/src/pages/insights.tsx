@@ -34,12 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+
 import {
   Dialog,
   DialogContent,
@@ -269,378 +264,355 @@ export default function InsightsPage() {
         )}
 
         {/* ── Tabs: Timeline + Breakdown + Submissions ── */}
-        <Tabs defaultValue="timeline" className="w-full">
-          <TabsList className="rounded-xl p-1 gap-1 border border-zinc-800/60 bg-zinc-950/80">
-            {[
-              { value: 'timeline', label: 'Timeline', icon: <Calendar className="w-3.5 h-3.5" /> },
-              { value: 'breakdown', label: 'Field Breakdown', icon: <BarChart2 className="w-3.5 h-3.5" /> },
-              { value: 'submissions', label: 'Submissions', icon: <Layers className="w-3.5 h-3.5" /> },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="flex items-center gap-1.5 text-xs font-bold rounded-lg px-4 py-2 transition-all duration-200 data-[state=active]:bg-amber-500 data-[state=active]:text-zinc-950 text-zinc-400 hover:text-zinc-200 cursor-pointer"
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {/* ── Timeline Tab ── */}
-          <TabsContent value="timeline" className="mt-6">
-            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none">
-              <CardHeader className="pb-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-bold text-white">
-                      Submission Timeline
-                    </CardTitle>
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      Volume of form answers submitted over time
-                    </p>
-                  </div>
+        <div className="space-y-8 mt-6">
+          {/* ── 1. Timeline Card ── */}
+          <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none p-4">
+            <CardHeader className="pb-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
+                  <Calendar className="w-4 h-4" />
                 </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="h-[300px] w-full">
-                  {analytics?.timeline && analytics.timeline.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={analytics.timeline} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
-                        <defs>
-                          <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                            <stop offset="60%" stopColor="#f59e0b" stopOpacity={0.08} />
-                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          stroke="#3f3f46"
-                          tick={{ fill: '#71717a', fontSize: 11 }}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          stroke="#3f3f46"
-                          tick={{ fill: '#71717a', fontSize: 11 }}
-                          tickLine={false}
-                          axisLine={false}
-                          allowDecimals={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#09090b',
-                            borderColor: '#27272a',
-                            borderRadius: '12px',
-                            color: '#f4f4f5',
-                            fontSize: '12px',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.85)',
-                          }}
-                          labelStyle={{ color: '#a1a1aa', fontWeight: 600 }}
-                          itemStyle={{ color: '#f59e0b', fontWeight: 700 }}
-                          cursor={{ stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1 }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#f59e0b"
-                          strokeWidth={2.5}
-                          fillOpacity={1}
-                          fill="url(#amberGradient)"
-                          dot={false}
-                          activeDot={{ r: 5, fill: '#f59e0b', stroke: '#09090b', strokeWidth: 2 }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-600">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                        <Calendar className="w-8 h-8 text-zinc-500" />
-                      </div>
-                      <p className="text-sm font-semibold text-zinc-400">No timeline data yet</p>
-                      <p className="text-xs text-zinc-500">Submissions will appear here once collected</p>
+                <div>
+                  <CardTitle className="text-base font-bold text-white">
+                    Submission Timeline
+                  </CardTitle>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Volume of form answers submitted over time
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="h-[300px] w-full">
+                {analytics?.timeline && analytics.timeline.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={analytics.timeline} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+                      <defs>
+                        <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
+                          <stop offset="60%" stopColor="#f59e0b" stopOpacity={0.08} />
+                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        stroke="#3f3f46"
+                        tick={{ fill: '#71717a', fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="#3f3f46"
+                        tick={{ fill: '#71717a', fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#09090b',
+                          borderColor: '#27272a',
+                          borderRadius: '12px',
+                          color: '#f4f4f5',
+                          fontSize: '12px',
+                          boxShadow: '0 10px 40px rgba(0,0,0,0.85)',
+                        }}
+                        labelStyle={{ color: '#a1a1aa', fontWeight: 600 }}
+                        itemStyle={{ color: '#f59e0b', fontWeight: 700 }}
+                        cursor={{ stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1 }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#f59e0b"
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#amberGradient)"
+                        dot={false}
+                        activeDot={{ r: 5, fill: '#f59e0b', stroke: '#09090b', strokeWidth: 2 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-600">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
+                      <Calendar className="w-8 h-8 text-zinc-500" />
                     </div>
-                  )}
+                    <p className="text-sm font-semibold text-zinc-400">No timeline data yet</p>
+                    <p className="text-xs text-zinc-500">Submissions will appear here once collected</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ── 2. Field Breakdown Section ── */}
+          {analytics?.fieldAnalytics && Object.keys(analytics.fieldAnalytics).length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-extrabold text-white tracking-tight">
+                  Question Breakdown
+                </h2>
+                <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                  {Object.keys(analytics.fieldAnalytics).length} fields
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {Object.entries(analytics.fieldAnalytics).map(([fieldId, data]: [string, any]) => {
+                  const isNumeric = ['rating', 'slider', 'number'].includes(data.type);
+                  return (
+                    <Card
+                      key={fieldId}
+                      className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none flex flex-col justify-between p-4"
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start gap-3">
+                          <CardTitle className="text-sm font-bold text-slate-200 leading-snug">
+                            {data.label || fieldId}
+                          </CardTitle>
+                          <Badge className="text-[9px] font-black px-2 py-0.5 rounded-full border-0 bg-amber-500/10 text-amber-500">
+                            {data.type}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          {data.responsesCount} response{data.responsesCount !== 1 ? 's' : ''}
+                        </p>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <Separator className="mb-4 bg-zinc-800/60" />
+                        {isNumeric ? (
+                          <div className="rounded-xl p-4 flex items-center justify-between bg-zinc-950/40 border border-zinc-800/60">
+                            <div>
+                              <p className="text-xs text-zinc-500 font-medium">Average Score</p>
+                              <p className="text-4xl font-black mt-1 text-amber-500">
+                                {data.average}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Metric</p>
+                              <p className="text-xs font-bold text-zinc-400 uppercase mt-1">
+                                Mean
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {Object.entries(data.distribution || {}).map(
+                              ([key, count]: [string, any]) => {
+                                const total = data.responsesCount || 1;
+                                const pct = Math.round((count / total) * 100);
+                                return (
+                                  <div key={key} className="space-y-1">
+                                    <div className="flex justify-between text-xs font-semibold">
+                                      <span className="text-zinc-300 truncate max-w-[180px]">
+                                        {key}
+                                      </span>
+                                      <span className="text-zinc-500 flex-shrink-0 ml-2">
+                                        {count} ({pct}%)
+                                      </span>
+                                    </div>
+                                    <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-800">
+                                      <div
+                                        className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-amber-500 to-amber-600 shadow-sm"
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              },
+                            )}
+                            {Object.keys(data.distribution || {}).length === 0 && (
+                              <p className="text-xs text-zinc-500 italic">No distribution data</p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none p-4">
+              <CardContent className="py-20 flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
+                  <BarChart2 className="w-10 h-10 text-zinc-500" />
+                </div>
+                <div>
+                  <p className="font-bold text-zinc-300">No field analytics yet</p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Analytics will populate once responses are submitted
+                  </p>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          )}
 
-          {/* ── Field Breakdown Tab ── */}
-          <TabsContent value="breakdown" className="mt-6">
-            {analytics?.fieldAnalytics && Object.keys(analytics.fieldAnalytics).length > 0 ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-extrabold text-white tracking-tight">
-                    Question Breakdown
-                  </h2>
-                  <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                    {Object.keys(analytics.fieldAnalytics).length} fields
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {Object.entries(analytics.fieldAnalytics).map(([fieldId, data]: [string, any]) => {
-                    const isNumeric = ['rating', 'slider', 'number'].includes(data.type);
-                    return (
-                      <Card
-                        key={fieldId}
-                        className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none flex flex-col justify-between"
-                      >
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start gap-3">
-                            <CardTitle className="text-sm font-bold text-slate-200 leading-snug">
-                              {data.label || fieldId}
-                            </CardTitle>
-                            <Badge className="text-[9px] font-black px-2 py-0.5 rounded-full border-0 bg-amber-500/10 text-amber-500">
-                              {data.type}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-slate-600 mt-0.5">
-                            {data.responsesCount} response{data.responsesCount !== 1 ? 's' : ''}
-                          </p>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <Separator className="mb-4 bg-zinc-800/60" />
-                          {isNumeric ? (
-                            <div className="rounded-xl p-4 flex items-center justify-between bg-zinc-950/40 border border-zinc-800/60">
-                              <div>
-                                <p className="text-xs text-zinc-500 font-medium">Average Score</p>
-                                <p className="text-4xl font-black mt-1 text-amber-500">
-                                  {data.average}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Metric</p>
-                                <p className="text-xs font-bold text-zinc-400 uppercase mt-1">
-                                  Mean
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-2.5">
-                              {Object.entries(data.distribution || {}).map(
-                                ([key, count]: [string, any]) => {
-                                  const total = data.responsesCount || 1;
-                                  const pct = Math.round((count / total) * 100);
-                                  return (
-                                    <div key={key} className="space-y-1">
-                                      <div className="flex justify-between text-xs font-semibold">
-                                        <span className="text-zinc-300 truncate max-w-[180px]">
-                                          {key}
-                                        </span>
-                                        <span className="text-zinc-500 flex-shrink-0 ml-2">
-                                          {count} ({pct}%)
-                                        </span>
-                                      </div>
-                                      <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-800">
-                                        <div
-                                          className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-amber-500 to-amber-600 shadow-sm"
-                                          style={{ width: `${pct}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  );
-                                },
-                              )}
-                              {Object.keys(data.distribution || {}).length === 0 && (
-                                <p className="text-xs text-zinc-500 italic">No distribution data</p>
-                              )}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none">
-                <CardContent className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                    <BarChart2 className="w-10 h-10 text-zinc-500" />
+          {/* ── 3. Submissions Card ── */}
+          <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none overflow-hidden p-4">
+            {/* Card Header */}
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
+                    <Layers className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-bold text-zinc-300">No field analytics yet</p>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Analytics will populate once responses are submitted
+                    <CardTitle className="text-base font-bold text-white">
+                      All Submissions
+                    </CardTitle>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Individual form replies submitted by respondents
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* ── Submissions Tab ── */}
-          <TabsContent value="submissions" className="mt-6">
-            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none overflow-hidden">
-              {/* Card Header */}
-              <CardHeader className="pb-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
-                      <Layers className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-bold text-white">
-                        All Submissions
-                      </CardTitle>
-                      <p className="text-xs text-zinc-500 mt-0.5">
-                        Individual form replies submitted by respondents
-                      </p>
-                    </div>
-                  </div>
-                  {submissionData && (
-                    <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                      {submissionData.totalCount} entries
-                    </Badge>
-                  )}
                 </div>
-              </CardHeader>
-
-              <Separator className="mt-4 bg-zinc-800/60" />
-
-              {/* Table body */}
-              <div className="overflow-x-auto">
-                {listQuery.isLoading ? (
-                  <div className="py-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
-                    <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-                    <span className="text-sm font-medium">Loading responses…</span>
-                  </div>
-                ) : !submissionData || submissionData.submissions.length === 0 ? (
-                  <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                      <FileText className="w-10 h-10 text-zinc-500" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-zinc-300">No submissions yet</p>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        Share your form link to start collecting responses
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <ScrollArea className="w-full">
-                    <table className="w-full text-left border-collapse min-w-[640px]">
-                      <thead>
-                        <tr className="text-[11px] font-black uppercase tracking-widest bg-zinc-950/60 border-b border-zinc-800 text-zinc-500">
-                          <th className="py-3.5 px-5">Submitted At</th>
-                          {activeFields.slice(0, 4).map((f) => (
-                            <th key={f.id} className="py-3.5 px-5 max-w-[180px] truncate">
-                              {f.properties.label}
-                            </th>
-                          ))}
-                          <th className="py-3.5 px-5 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {submissionData.submissions.map((sub) => {
-                          const data = sub.data as Record<string, any>;
-                          return (
-                            <tr
-                              key={sub.id}
-                              className="text-sm border-b border-zinc-800/40 hover:bg-amber-500/[0.02] transition-colors duration-150"
-                            >
-                              <td className="py-4 px-5 text-zinc-400 whitespace-nowrap font-medium">
-                                {new Date(sub.createdAt).toLocaleString()}
-                              </td>
-                              {activeFields.slice(0, 4).map((f) => {
-                                const val = data[f.id];
-                                let cellContent = '';
-
-                                if (val === undefined || val === null) {
-                                  cellContent = '-';
-                                } else if (Array.isArray(val)) {
-                                  cellContent = val.join(', ');
-                                } else if (
-                                  typeof val === 'string' &&
-                                  val.startsWith('data:image/')
-                                ) {
-                                  cellContent = 'Image Preview';
-                                } else {
-                                  cellContent = String(val);
-                                }
-
-                                return (
-                                  <td
-                                    key={f.id}
-                                    className="py-4 px-5 text-zinc-400 max-w-[180px] truncate"
-                                  >
-                                    {typeof val === 'string' &&
-                                    val.startsWith('data:image/') ? (
-                                      <a
-                                        href={val}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all duration-150"
-                                      >
-                                        <Eye className="w-3 h-3" />
-                                        View Attachment
-                                      </a>
-                                    ) : (
-                                      cellContent
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              <td className="py-4 px-5 text-right">
-                                <button
-                                  onClick={() => setInspectSubmission(data)}
-                                  className="text-xs font-bold transition-colors duration-150 cursor-pointer text-amber-500 hover:text-amber-400"
-                                >
-                                  Inspect
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </ScrollArea>
+                {submissionData && (
+                  <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                    {submissionData.totalCount} entries
+                  </Badge>
                 )}
               </div>
+            </CardHeader>
 
-              {/* Pagination controls */}
-              {totalPages > 1 && (
-                <>
-                  <Separator className="bg-zinc-800/60" />
-                  <div className="px-6 py-4 flex items-center justify-between bg-zinc-950/20">
-                    <span className="text-xs text-zinc-500 font-medium">
-                      Page{' '}
-                      <span className="text-zinc-300 font-bold">{currentPage + 1}</span>{' '}
-                      of{' '}
-                      <span className="text-zinc-300 font-bold">{totalPages}</span>
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={currentPage === 0}
-                        onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                        className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={currentPage >= totalPages - 1}
-                        onClick={() => setCurrentPage((p) => p + 1)}
-                        className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
+            <Separator className="mt-4 bg-zinc-800/60" />
+
+            {/* Table body */}
+            <div className="overflow-x-auto">
+              {listQuery.isLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
+                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+                  <span className="text-sm font-medium">Loading responses…</span>
+                </div>
+              ) : !submissionData || submissionData.submissions.length === 0 ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
+                    <FileText className="w-10 h-10 text-zinc-500" />
                   </div>
-                </>
+                  <div>
+                    <p className="font-bold text-zinc-300">No submissions yet</p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Share your form link to start collecting responses
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <ScrollArea className="w-full">
+                  <table className="w-full text-left border-collapse min-w-[640px]">
+                    <thead>
+                      <tr className="text-[11px] font-black uppercase tracking-widest bg-zinc-950/60 border-b border-zinc-800 text-zinc-500">
+                        <th className="py-3.5 px-5">Submitted At</th>
+                        {activeFields.slice(0, 4).map((f) => (
+                          <th key={f.id} className="py-3.5 px-5 max-w-[180px] truncate">
+                            {f.properties.label}
+                          </th>
+                        ))}
+                        <th className="py-3.5 px-5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {submissionData.submissions.map((sub) => {
+                        const data = sub.data as Record<string, any>;
+                        return (
+                          <tr
+                            key={sub.id}
+                            className="text-sm border-b border-zinc-800/40 hover:bg-amber-500/[0.02] transition-colors duration-150"
+                          >
+                            <td className="py-4 px-5 text-zinc-400 whitespace-nowrap font-medium">
+                              {new Date(sub.createdAt).toLocaleString()}
+                            </td>
+                            {activeFields.slice(0, 4).map((f) => {
+                              const val = data[f.id];
+                              let cellContent = '';
+
+                              if (val === undefined || val === null) {
+                                cellContent = '-';
+                              } else if (Array.isArray(val)) {
+                                cellContent = val.join(', ');
+                              } else if (
+                                typeof val === 'string' &&
+                                val.startsWith('data:image/')
+                              ) {
+                                cellContent = 'Image Preview';
+                              } else {
+                                cellContent = String(val);
+                              }
+
+                              return (
+                                <td
+                                  key={f.id}
+                                  className="py-4 px-5 text-zinc-400 max-w-[180px] truncate"
+                                >
+                                  {typeof val === 'string' &&
+                                  val.startsWith('data:image/') ? (
+                                    <a
+                                      href={val}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all duration-150"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                      View Attachment
+                                    </a>
+                                  ) : (
+                                    cellContent
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td className="py-4 px-5 text-right">
+                              <button
+                                onClick={() => setInspectSubmission(sub)}
+                                className="text-xs font-bold transition-colors duration-150 cursor-pointer text-amber-500 hover:text-amber-400"
+                              >
+                                Inspect
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </ScrollArea>
               )}
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <>
+                <Separator className="bg-zinc-800/60" />
+                <div className="px-6 py-4 flex items-center justify-between bg-zinc-950/20">
+                  <span className="text-xs text-zinc-500 font-medium">
+                    Page{' '}
+                    <span className="text-zinc-300 font-bold">{currentPage + 1}</span>{' '}
+                    of{' '}
+                    <span className="text-zinc-300 font-bold">{totalPages}</span>
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={currentPage === 0}
+                      onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                      className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={currentPage >= totalPages - 1}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                      className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
       </main>
 
       {/* ─── INSPECT SUBMISSION DIALOG ────────────────────────────────────── */}
@@ -683,7 +655,7 @@ export default function InsightsPage() {
                   <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Responses</h4>
                   <div className="divide-y divide-zinc-800/40 border-t border-b border-zinc-800/60">
                     {activeFields.map((field) => {
-                      const answer = inspectSubmission.answers?.[field.id];
+                      const answer = inspectSubmission.data?.[field.id];
                       let displayVal = '—';
                       if (answer !== undefined && answer !== null) {
                         if (typeof answer === 'boolean') {

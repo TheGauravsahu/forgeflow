@@ -352,7 +352,9 @@ export default function PublicFormPage() {
 
   const primaryColor = theme.primaryColor || '#6366f1';
   const borderRadius = theme.borderRadius || '0.75rem';
-  const fontFamily = theme.fontFamily || 'Inter, system-ui, sans-serif';
+  const fontFamily = theme.fontFamily
+    ? `"${theme.fontFamily}", Geist, "Plus Jakarta Sans", Inter, system-ui, sans-serif`
+    : 'Geist, "Plus Jakarta Sans", Inter, system-ui, sans-serif';
 
   const primaryBtnStyle: React.CSSProperties = {
     backgroundColor: primaryColor,

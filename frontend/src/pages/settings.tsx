@@ -260,7 +260,7 @@ export default function SettingsPage() {
 
             {/* TAB CONTENT: SECURITY */}
             <TabsContent value="security" className="space-y-6 outline-none">
-              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl">
+              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-white flex items-center gap-2">
                     <Lock className="w-4 h-4 text-amber-500" />
@@ -342,7 +342,7 @@ export default function SettingsPage() {
 
             {/* TAB CONTENT: PREFERENCES */}
             <TabsContent value="preferences" className="space-y-6 outline-none">
-              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl">
+              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-white flex items-center gap-2">
                     <Sliders className="w-4 h-4 text-amber-500" />
@@ -408,7 +408,7 @@ export default function SettingsPage() {
 
             {/* TAB CONTENT: DEVELOPER */}
             <TabsContent value="developer" className="space-y-6 outline-none">
-              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl">
+              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-white flex items-center gap-2">
                     <Key className="w-4 h-4 text-amber-500" />
