@@ -330,7 +330,18 @@ export default function LandingPage() {
             </div>
             <span className="font-black text-sm text-white tracking-tight">ForgeFlow</span>
           </div>
-          <p>© {new Date().getFullYear()} ForgeFlow. Built for developers with Geist variable fonts.</p>
+          <p>
+            © {new Date().getFullYear()} ForgeFlow. Built for developers by{' '}
+            <a
+              href="https://github.com/TheGauravsahu/forgeflow"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-amber-500 transition-colors font-medium underline underline-offset-4"
+            >
+              Gaurav Sahu
+            </a>
+            .
+          </p>
         </div>
       </footer>
 
