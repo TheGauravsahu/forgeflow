@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn CSS variable overrides – yellow-on-dark theme */
+    --background: 240 10% 4%;
+    --foreground: 40 30% 96%;
+
+    --card: 240 8% 8%;
+    --card-foreground: 40 30% 96%;
+
+    --popover: 240 8% 8%;
+    --popover-foreground: 40 30% 96%;
+
+    --primary: 38 92% 50%;
+    --primary-foreground: 240 10% 4%;
+
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 40 20% 85%;
+
+    --muted: 240 5% 13%;
+    --muted-foreground: 240 5% 55%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 240 10% 4%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 40 30% 96%;
+
+    --border: 240 5% 18%;
+    --input: 240 5% 15%;
+    --ring: 38 92% 50%;
+
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-[#09090b] text-[#f5f0e8] font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #09090b;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #27272f;
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(245, 158, 11, 0.3);
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fef3c7;
+  }
+}
+
+@layer utilities {
+  .brand-glow {
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.15);
+  }
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fcd34d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .border-brand {
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-surface-800 border border-surface-600 rounded-lg text-white placeholder-surface-400
+    focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60
+    transition-all duration-200 text-sm;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+    bg-brand-500 hover:bg-brand-400 text-surface-950 font-semibold text-sm
+    shadow-brand-sm hover:shadow-brand transition-all duration-200
+    disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg
+    bg-surface-800 hover:bg-surface-700 text-surface-100 font-medium text-sm
+    border border-surface-600 hover:border-surface-500 transition-all duration-200
+    cursor-pointer;
+  }
+  .card-surface {
+    @apply bg-surface-900 border border-surface-800 rounded-xl shadow-card;
+  }
+}

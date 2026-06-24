@@ -1,0 +1,66 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  forms        Form[]
+  folders      Folder[]
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forms     Form[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, userId])
+}
+
+model Form {
+  id             String         @id @default(uuid())
+  title          String
+  description    String?
+  schema         Json           // FormSchema (array of FormField)
+  settings       Json           // FormSettings
+  published      Boolean        @default(false)
+  isArchived     Boolean        @default(false)
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId       String?
+  folder         Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  submissions    Submission[]
+  versions       FormVersion[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model FormVersion {
+  id        String   @id @default(uuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  version   Int
+  schema    Json
+  createdAt DateTime @default(now())
+}
+
+model Submission {
+  id        String   @id @default(uuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  data      Json     // Dynamic submission content { fieldId: value }
+  createdAt DateTime @default(now())
+}
