@@ -33,39 +33,6 @@ app.use(
   })
 );
 
-// OpenAPI Express Adapter binding
-app.use(
-  '/api',
-  createOpenApiExpressMiddleware({
-    router: appRouter,
-    createContext,
-  })
-);
-
-// Generate OpenAPI Spec
-const openApiDocument = generateOpenApiDocument(appRouter, {
-  title: 'ForgeFlow API',
-  version: '1.0.0',
-  baseUrl: `http://localhost:${PORT}/api`,
-  tags: ['auth', 'form', 'folder', 'submission', 'analytics']
-});
-
-// Serve OpenAPI Spec
-app.get('/openapi.json', (req, res) => {
-  res.json(openApiDocument);
-});
-
-// Scalar API Reference Dashboard
-app.use(
-  '/docs',
-  apiReference({
-    spec: {
-      content: openApiDocument,
-    },
-    theme: 'kepler'
-  })
-);
-
 // Direct CSV Export Endpoint
 app.get('/api/forms/:formId/export-csv', async (req, res) => {
   const { formId } = req.params;
@@ -123,6 +90,39 @@ app.get('/api/forms/:formId/export-csv', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error while exporting CSV.' });
   }
 });
+
+// OpenAPI Express Adapter binding
+app.use(
+  '/api',
+  createOpenApiExpressMiddleware({
+    router: appRouter,
+    createContext,
+  })
+);
+
+// Generate OpenAPI Spec
+const openApiDocument = generateOpenApiDocument(appRouter, {
+  title: 'ForgeFlow API',
+  version: '1.0.0',
+  baseUrl: `http://localhost:${PORT}/api`,
+  tags: ['auth', 'form', 'folder', 'submission', 'analytics']
+});
+
+// Serve OpenAPI Spec
+app.get('/openapi.json', (req, res) => {
+  res.json(openApiDocument);
+});
+
+// Scalar API Reference Dashboard
+app.use(
+  '/docs',
+  apiReference({
+    spec: {
+      content: openApiDocument,
+    },
+    theme: 'kepler'
+  })
+);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });

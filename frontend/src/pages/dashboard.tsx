@@ -1261,7 +1261,7 @@ export default function DashboardPage() {
 
       {/* ─── CREATE FORM DIALOG (GALLERY BASED) ───────────────────────────── */}
       <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-xl shadow-2xl shadow-black/60 rounded-2xl">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-xl shadow-2xl shadow-black/60 rounded-2xl">
           <DialogHeader className="pb-2">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
