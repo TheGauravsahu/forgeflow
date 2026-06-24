@@ -122,3 +122,12 @@
     @apply bg-surface-900 border border-surface-800 rounded-xl shadow-card;
   }
 }
+
+/* Custom scrollbar hides */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

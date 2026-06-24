@@ -3,26 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/useToastStore';
 import { FormField } from '../types/shared';
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-} from 'recharts';
+import { AnalyticsDashboard } from '../components/insights/AnalyticsDashboard';
+import { SubmissionsTable } from '../components/insights/SubmissionsTable';
+import { AISubmissionsAnalyzer } from '../components/insights/AISubmissionsAnalyzer';
 import {
   ArrowLeft,
   Download,
-  Calendar,
   Layers,
   FileText,
-  ChevronLeft,
-  ChevronRight,
   TrendingUp,
   BarChart2,
-  Eye,
   Zap,
   Sparkles,
 } from 'lucide-react';
@@ -30,11 +20,8 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import {
@@ -47,30 +34,7 @@ import {
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
-function Loader2({ className }: { className?: string }) {
-  return (
-    <svg
-      className={`animate-spin ${className ?? ''}`}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      />
-    </svg>
-  );
-}
+
 
 /* ─────────────────────────── stat card skeleton ─────────────────────────── */
 
@@ -362,411 +326,29 @@ export default function InsightsPage() {
 
         <div className="space-y-8">
           {activeTab === 'analytics' && (
-            <>
-              {/* ── 1. Timeline Card ── */}
-          <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none p-4">
-            <CardHeader className="pb-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold text-white">
-                    Submission Timeline
-                  </CardTitle>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    Volume of form answers submitted over time
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="h-[300px] w-full">
-                {analytics?.timeline && analytics.timeline.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={analytics.timeline} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
-                      <defs>
-                        <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                          <stop offset="60%" stopColor="#f59e0b" stopOpacity={0.08} />
-                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        stroke="#3f3f46"
-                        tick={{ fill: '#71717a', fontSize: 11 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke="#3f3f46"
-                        tick={{ fill: '#71717a', fontSize: 11 }}
-                        tickLine={false}
-                        axisLine={false}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#09090b',
-                          borderColor: '#27272a',
-                          borderRadius: '12px',
-                          color: '#f4f4f5',
-                          fontSize: '12px',
-                          boxShadow: '0 10px 40px rgba(0,0,0,0.85)',
-                        }}
-                        labelStyle={{ color: '#a1a1aa', fontWeight: 600 }}
-                        itemStyle={{ color: '#f59e0b', fontWeight: 700 }}
-                        cursor={{ stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1 }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="count"
-                        stroke="#f59e0b"
-                        strokeWidth={2.5}
-                        fillOpacity={1}
-                        fill="url(#amberGradient)"
-                        dot={false}
-                        activeDot={{ r: 5, fill: '#f59e0b', stroke: '#09090b', strokeWidth: 2 }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-600">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                      <Calendar className="w-8 h-8 text-zinc-500" />
-                    </div>
-                    <p className="text-sm font-semibold text-zinc-400">No timeline data yet</p>
-                    <p className="text-xs text-zinc-500">Submissions will appear here once collected</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ── 2. Field Breakdown Section ── */}
-          {analytics?.fieldAnalytics && Object.keys(analytics.fieldAnalytics).length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-extrabold text-white tracking-tight">
-                  Question Breakdown
-                </h2>
-                <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                  {Object.keys(analytics.fieldAnalytics).length} fields
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {Object.entries(analytics.fieldAnalytics).map(([fieldId, data]: [string, any]) => {
-                  const isNumeric = ['rating', 'slider', 'number'].includes(data.type);
-                  return (
-                    <Card
-                      key={fieldId}
-                      className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none flex flex-col justify-between p-4"
-                    >
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start gap-3">
-                          <CardTitle className="text-sm font-bold text-slate-200 leading-snug">
-                            {data.label || fieldId}
-                          </CardTitle>
-                          <Badge className="text-[9px] font-black px-2 py-0.5 rounded-full border-0 bg-amber-500/10 text-amber-500">
-                            {data.type}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          {data.responsesCount} response{data.responsesCount !== 1 ? 's' : ''}
-                        </p>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <Separator className="mb-4 bg-zinc-800/60" />
-                        {isNumeric ? (
-                          <div className="rounded-xl p-4 flex items-center justify-between bg-zinc-950/40 border border-zinc-800/60">
-                            <div>
-                              <p className="text-xs text-zinc-500 font-medium">Average Score</p>
-                              <p className="text-4xl font-black mt-1 text-amber-500">
-                                {data.average}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Metric</p>
-                              <p className="text-xs font-bold text-zinc-400 uppercase mt-1">
-                                Mean
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2.5">
-                            {Object.entries(data.distribution || {}).map(
-                              ([key, count]: [string, any]) => {
-                                const total = data.responsesCount || 1;
-                                const pct = Math.round((count / total) * 100);
-                                return (
-                                  <div key={key} className="space-y-1">
-                                    <div className="flex justify-between text-xs font-semibold">
-                                      <span className="text-zinc-300 truncate max-w-[180px]">
-                                        {key}
-                                      </span>
-                                      <span className="text-zinc-500 flex-shrink-0 ml-2">
-                                        {count} ({pct}%)
-                                      </span>
-                                    </div>
-                                    <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-800">
-                                      <div
-                                        className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-amber-500 to-amber-600 shadow-sm"
-                                        style={{ width: `${pct}%` }}
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              },
-                            )}
-                            {Object.keys(data.distribution || {}).length === 0 && (
-                              <p className="text-xs text-zinc-500 italic">No distribution data</p>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none p-4">
-              <CardContent className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                  <BarChart2 className="w-10 h-10 text-zinc-500" />
-                </div>
-                <div>
-                  <p className="font-bold text-zinc-300">No field analytics yet</p>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Analytics will populate once responses are submitted
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-            </>
+            <AnalyticsDashboard analytics={analytics} />
           )}
 
           {activeTab === 'submissions' && (
-            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none overflow-hidden p-4">
-            {/* Card Header */}
-            <CardHeader className="pb-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
-                    <Layers className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-bold text-white">
-                      All Submissions
-                    </CardTitle>
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      Individual form replies submitted by respondents
-                    </p>
-                  </div>
-                </div>
-                {submissionData && (
-                  <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
-                    {submissionData.totalCount} entries
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-
-            <Separator className="mt-4 bg-zinc-800/60" />
-
-            {/* Table body */}
-            <div className="overflow-x-auto">
-              {listQuery.isLoading ? (
-                <div className="py-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
-                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-                  <span className="text-sm font-medium">Loading responses…</span>
-                </div>
-              ) : !submissionData || submissionData.submissions.length === 0 ? (
-                <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                    <FileText className="w-10 h-10 text-zinc-500" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-zinc-300">No submissions yet</p>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Share your form link to start collecting responses
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <ScrollArea className="w-full">
-                  <table className="w-full text-left border-collapse min-w-[640px]">
-                    <thead>
-                      <tr className="text-[11px] font-black uppercase tracking-widest bg-zinc-950/60 border-b border-zinc-800 text-zinc-500">
-                        <th className="py-3.5 px-5">Submitted At</th>
-                        {activeFields.slice(0, 4).map((f) => (
-                          <th key={f.id} className="py-3.5 px-5 max-w-[180px] truncate">
-                            {f.properties.label}
-                          </th>
-                        ))}
-                        <th className="py-3.5 px-5 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {submissionData.submissions.map((sub) => {
-                        const data = sub.data as Record<string, any>;
-                        return (
-                          <tr
-                            key={sub.id}
-                            className="text-sm border-b border-zinc-800/40 hover:bg-amber-500/[0.02] transition-colors duration-150"
-                          >
-                            <td className="py-4 px-5 text-zinc-400 whitespace-nowrap font-medium">
-                              {new Date(sub.createdAt).toLocaleString()}
-                            </td>
-                            {activeFields.slice(0, 4).map((f) => {
-                              const val = data[f.id];
-                              let cellContent = '';
-
-                              if (val === undefined || val === null) {
-                                cellContent = '-';
-                              } else if (Array.isArray(val)) {
-                                cellContent = val.join(', ');
-                              } else if (
-                                typeof val === 'string' &&
-                                val.startsWith('data:image/')
-                              ) {
-                                cellContent = 'Image Preview';
-                              } else {
-                                cellContent = String(val);
-                              }
-
-                              return (
-                                <td
-                                  key={f.id}
-                                  className="py-4 px-5 text-zinc-400 max-w-[180px] truncate"
-                                >
-                                  {typeof val === 'string' &&
-                                  val.startsWith('data:image/') ? (
-                                    <a
-                                      href={val}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all duration-150"
-                                    >
-                                      <Eye className="w-3 h-3" />
-                                      View Attachment
-                                    </a>
-                                  ) : (
-                                    cellContent
-                                  )}
-                                </td>
-                              );
-                            })}
-                            <td className="py-4 px-5 text-right">
-                              <button
-                                onClick={() => setInspectSubmission(sub)}
-                                className="text-xs font-bold transition-colors duration-150 cursor-pointer text-amber-500 hover:text-amber-400"
-                              >
-                                Inspect
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </ScrollArea>
-              )}
-            </div>
-
-            {/* Pagination controls */}
-            {totalPages > 1 && (
-              <>
-                <Separator className="bg-zinc-800/60" />
-                <div className="px-6 py-4 flex items-center justify-between bg-zinc-950/20">
-                  <span className="text-xs text-zinc-500 font-medium">
-                    Page{' '}
-                    <span className="text-zinc-300 font-bold">{currentPage + 1}</span>{' '}
-                    of{' '}
-                    <span className="text-zinc-300 font-bold">{totalPages}</span>
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={currentPage === 0}
-                      onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                      className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={currentPage >= totalPages - 1}
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                      className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </Card>
+            <SubmissionsTable
+              submissionData={submissionData}
+              isLoading={listQuery.isLoading}
+              activeFields={activeFields}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalPages={totalPages}
+              setInspectSubmission={setInspectSubmission}
+            />
           )}
 
           {activeTab === 'ai' && (
-            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none p-6">
-              <CardHeader className="p-0 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-bold text-white">AI Submission Analyst Report</CardTitle>
-                    <p className="text-xs text-zinc-500 mt-0.5">Gemini-powered natural language summary, sentiment analysis, trends, and action recommendations.</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <Separator className="bg-zinc-800/60 my-2" />
-              <CardContent className="p-0 pt-4">
-                {!aiAnalysis ? (
-                  <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                    {isGeneratingAnalysis ? (
-                      <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="w-8 h-8 text-amber-500" />
-                        <span className="text-sm font-medium text-zinc-450">Gemini is analyzing submissions, compiling insights, and generating recommendations...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
-                          <Sparkles className="w-10 h-10 text-zinc-500" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-zinc-300">Ready to Analyze Responses</p>
-                          <p className="text-xs text-zinc-500 mt-1">Get instant feedback summaries, customer sentiments, key findings, and action items.</p>
-                        </div>
-                        <Button
-                          onClick={handleGenerateAnalysis}
-                          className="mt-2 flex items-center gap-2 font-bold text-sm rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/10 border-0 cursor-pointer"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          Generate AI Summary
-                        </Button>
-                      </>
-                    )}
-                    {aiAnalysisError && (
-                      <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl max-w-md">
-                        {aiAnalysisError}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4 prose prose-invert max-w-none bg-zinc-950/40 border border-zinc-850 p-6 rounded-2xl font-sans">
-                    {renderMarkdown(aiAnalysis)}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <AISubmissionsAnalyzer
+              aiAnalysis={aiAnalysis}
+              isGeneratingAnalysis={isGeneratingAnalysis}
+              handleGenerateAnalysis={handleGenerateAnalysis}
+              aiAnalysisError={aiAnalysisError}
+              renderMarkdown={renderMarkdown}
+            />
           )}
         </div>
       </main>

@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3001;
 app.use(securityHeaders);
 
 app.use(cors({
-  origin: '*',
+  origin: process.env.FROTEND_API_URL,
   credentials: true
 }));
 

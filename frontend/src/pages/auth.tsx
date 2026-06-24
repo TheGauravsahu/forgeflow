@@ -2,32 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/useToastStore';
-import {
-  LogIn,
-  UserPlus,
-  ShieldAlert,
-  Sparkles,
-  CheckCircle2,
-  Mail,
-  Lock,
-  User,
-  Zap,
-} from 'lucide-react';
-
-/* ─────────────────────────────────────────────────────────
-   Tiny helpers – scoped so they don't pollute the module
-───────────────────────────────────────────────────────── */
-
-/** Inline-style focus ring helper (yellow, since Tailwind
- *  arbitrary-value focus rings may not purge correctly). */
-const fieldBase =
-  'w-full pl-10 pr-4 py-3 rounded-xl text-sm text-white placeholder-surface-400 ' +
-  'bg-surface-800/70 border border-surface-600 ' +
-  'transition-all duration-200 outline-none ' +
-  'focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 focus:bg-surface-800';
-
-const labelBase =
-  'block text-2xs font-bold uppercase tracking-widest text-surface-300 mb-2';
+import { ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { BrandingPane } from '@/components/auth/BrandingPane';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
 /* ─────────────────────────────────────────────────────────
    Component
@@ -165,60 +143,7 @@ export default function AuthPage() {
         >
 
           {/* ── Brand Header ── */}
-          <div className="flex flex-col items-center mb-8">
-            {/* Logo mark */}
-            <div className="relative mb-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(245,158,11,0.20) 0%, rgba(245,158,11,0.08) 100%)',
-                  border: '1px solid rgba(245,158,11,0.30)',
-                  boxShadow: '0 0 24px rgba(245,158,11,0.20)',
-                }}
-              >
-                <Zap
-                  className="w-7 h-7"
-                  style={{ color: '#f59e0b', filter: 'drop-shadow(0 0 6px rgba(245,158,11,0.6))' }}
-                />
-              </div>
-              {/* Sparkle badge */}
-              <div
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  boxShadow: '0 0 10px rgba(245,158,11,0.6)',
-                }}
-              >
-                <Sparkles className="w-2.5 h-2.5 text-surface-950" />
-              </div>
-            </div>
-
-            {/* Brand name */}
-            <div className="flex items-center gap-1.5 mb-1">
-              <span
-                className="text-2xl font-extrabold tracking-tight"
-                style={{
-                  background: 'linear-gradient(90deg, #fbbf24, #f59e0b, #d97706)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                ForgeFlow
-              </span>
-            </div>
-
-            {/* Mode-specific heading */}
-            <h1 className="text-xl font-bold text-white mt-2">
-              {isLogin ? 'Welcome back' : 'Create your account'}
-            </h1>
-            <p className="text-sm text-surface-300 mt-1 text-center leading-relaxed">
-              {isLogin
-                ? 'Sign in to manage your custom form builder.'
-                : 'Get started — build and deploy rich, responsive forms.'}
-            </p>
-          </div>
+          <BrandingPane isLogin={isLogin} />
 
           {/* ── Mode Toggle ── */}
           <div
@@ -287,124 +212,27 @@ export default function AuthPage() {
           )}
 
           {/* ── Form ── */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-
-            {/* Name field — register only */}
-            {!isLogin && (
-              <div className="animate-fade-in">
-                <label htmlFor="auth-name" className={labelBase}>
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                    style={{ color: '#52525b' }}
-                  />
-                  <input
-                    id="auth-name"
-                    type="text"
-                    required
-                    autoComplete="name"
-                    placeholder="Jane Smith"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={fieldBase}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Email */}
-            <div>
-              <label htmlFor="auth-email" className={labelBase}>
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: '#52525b' }}
-                />
-                <input
-                  id="auth-email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="you@forgeflow.dev"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={fieldBase}
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="auth-password" className={labelBase}>
-                Password
-              </label>
-              <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: '#52525b' }}
-                />
-                <input
-                  id="auth-password"
-                  type="password"
-                  required
-                  autoComplete={isLogin ? 'current-password' : 'new-password'}
-                  placeholder="••••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={fieldBase}
-                />
-              </div>
-            </div>
-
-            {/* Submit button */}
-            <button
-              id="auth-submit-btn"
-              type="submit"
-              disabled={isLoading}
-              className="relative w-full mt-2 py-3 rounded-xl font-bold text-sm tracking-wide text-surface-950 flex items-center justify-center gap-2 transition-all duration-200 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group"
-              style={{
-                background: isLoading
-                  ? 'rgba(245,158,11,0.6)'
-                  : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
-                boxShadow: isLoading
-                  ? 'none'
-                  : '0 0 24px rgba(245,158,11,0.35), 0 2px 8px rgba(0,0,0,0.4)',
-              }}
-            >
-              {/* Hover shimmer layer */}
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%)',
-                }}
-              />
-
-              {isLoading ? (
-                <>
-                  <span
-                    className="w-4 h-4 rounded-full border-2 border-surface-950/30 border-t-surface-950 animate-spin"
-                  />
-                  <span>Processing…</span>
-                </>
-              ) : isLogin ? (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  Sign In to ForgeFlow
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4" />
-                  Create Account
-                </>
-              )}
-            </button>
-          </form>
+          {isLogin ? (
+            <LoginForm
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              isLoading={isLoading}
+              onSubmit={handleSubmit}
+            />
+          ) : (
+            <RegisterForm
+              name={name}
+              setName={setName}
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              isLoading={isLoading}
+              onSubmit={handleSubmit}
+            />
+          )}
 
           {/* ── Footer toggle ── */}
           <div
