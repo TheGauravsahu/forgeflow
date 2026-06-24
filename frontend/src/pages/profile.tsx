@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import {
   Sparkles,
   LayoutGrid,
@@ -35,6 +36,8 @@ export default function ProfilePage() {
   // Responsiveness State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  const toast = useToastStore();
+
   // Fetch token and current user
   useEffect(() => {
     const savedToken = localStorage.getItem('forgeflow_token');
@@ -46,27 +49,28 @@ export default function ProfilePage() {
   }, [navigate]);
 
   // queries
-  const userQuery = trpc.auth.me.useQuery(undefined, {
+  const userQuery = api.auth.me.useQuery(undefined, {
     enabled: !!token,
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       setName(data.name || '');
       setEmail(data.email || '');
     }
   });
 
-  const activeFormsQuery = trpc.form.list.useQuery(
+  const activeFormsQuery = api.form.list.useQuery(
     { isArchived: false },
     { enabled: !!token }
   );
 
-  const archivedFormsQuery = trpc.form.list.useQuery(
+  const archivedFormsQuery = api.form.list.useQuery(
     { isArchived: true },
     { enabled: !!token }
   );
 
   // mutations
-  const updateProfileMutation = trpc.auth.update.useMutation({
-    onSuccess: (data) => {
+  const updateProfileMutation = api.auth.update.useMutation({
+    onSuccess: (data: any) => {
+      toast.success('Your profile details have been saved.', 'Profile Updated');
       setSuccessMsg('Profile updated successfully!');
       setErrorMsg('');
       // Update localStorage user details
@@ -81,7 +85,8 @@ export default function ProfilePage() {
       }
       setTimeout(() => setSuccessMsg(''), 3000);
     },
-    onError: (err) => {
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update profile.', 'Profile Update Failed');
       setErrorMsg(err.message || 'Failed to update profile.');
       setSuccessMsg('');
     }

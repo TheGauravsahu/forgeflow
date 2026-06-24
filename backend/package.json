@@ -12,14 +12,11 @@
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
-    "@scalar/express-api-reference": "^0.10.5",
-    "@trpc/server": "^10.45.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "trpc-openapi": "^1.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

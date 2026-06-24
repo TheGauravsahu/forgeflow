@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import {
   FileText,
   FolderOpen,
@@ -124,9 +125,10 @@ export default function DashboardPage() {
   }, [navigate]);
 
   // Queries & Mutations
-  const utils = trpc.useContext();
-  const foldersQuery = trpc.form.getFolders.useQuery(undefined, { enabled: !!token });
-  const formsQuery = trpc.form.list.useQuery(
+  const toast = useToastStore();
+  const utils = api.useContext();
+  const foldersQuery = api.form.getFolders.useQuery(undefined, { enabled: !!token });
+  const formsQuery = api.form.list.useQuery(
     {
       folderId: selectedFolderId === null ? 'root' : selectedFolderId,
       isArchived: showArchived,
@@ -135,8 +137,9 @@ export default function DashboardPage() {
     { enabled: !!token }
   );
 
-  const createFormMutation = trpc.form.create.useMutation({
+  const createFormMutation = api.form.create.useMutation({
     onSuccess: (data) => {
+      toast.success('Form created successfully!', 'Form Created');
       utils.form.list.invalidate();
       setIsCreateFormOpen(false);
       setNewFormTitle('');
@@ -146,10 +149,13 @@ export default function DashboardPage() {
       setCreationTab('template');
       setAiError(null);
       navigate(`/builder/${data.id}`);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to create form.', 'Form Creation Failed');
     }
   });
 
-  const generateFormMutation = trpc.ai.generateForm.useMutation();
+  const generateFormMutation = api.ai.generateForm.useMutation();
 
   // Instantiate pending template if chosen from landing page
   useEffect(() => {
@@ -168,48 +174,72 @@ export default function DashboardPage() {
     }
   }, [token, createFormMutation]);
 
-  const createFolderMutation = trpc.form.createFolder.useMutation({
+  const createFolderMutation = api.form.createFolder.useMutation({
     onSuccess: () => {
+      toast.success('Folder created successfully!', 'Folder Created');
       utils.form.getFolders.invalidate();
       setIsCreateFolderOpen(false);
       setNewFolderName('');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to create folder.', 'Folder Creation Failed');
     }
   });
 
-  const deleteFolderMutation = trpc.form.deleteFolder.useMutation({
+  const deleteFolderMutation = api.form.deleteFolder.useMutation({
     onSuccess: () => {
+      toast.success('Folder deleted successfully.', 'Folder Deleted');
       utils.form.getFolders.invalidate();
       utils.form.list.invalidate();
       setSelectedFolderId(null);
       setFolderToDeleteId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to delete folder.', 'Folder Deletion Failed');
     }
   });
 
-  const duplicateFormMutation = trpc.form.duplicate.useMutation({
+  const duplicateFormMutation = api.form.duplicate.useMutation({
     onSuccess: () => {
+      toast.success('Form duplicated successfully.', 'Form Duplicated');
       utils.form.list.invalidate();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to duplicate form.', 'Duplication Failed');
     }
   });
 
-  const archiveFormMutation = trpc.form.update.useMutation({
+  const archiveFormMutation = api.form.update.useMutation({
     onSuccess: () => {
+      toast.success('Form archive status updated.', 'Success');
       utils.form.list.invalidate();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update form.', 'Error');
     }
   });
 
-  const updateFormMutation = trpc.form.update.useMutation({
+  const updateFormMutation = api.form.update.useMutation({
     onSuccess: () => {
+      toast.success('Form updated successfully.', 'Success');
       utils.form.list.invalidate();
       utils.form.getFolders.invalidate();
       setRenameForm(null);
       setMoveForm(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update form.', 'Error');
     }
   });
 
-  const deleteFormMutation = trpc.form.delete.useMutation({
+  const deleteFormMutation = api.form.delete.useMutation({
     onSuccess: () => {
+      toast.success('Form deleted permanently.', 'Form Deleted');
       utils.form.list.invalidate();
       setFormToDeleteId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to delete form.', 'Deletion Failed');
     }
   });
 
@@ -262,9 +292,12 @@ export default function DashboardPage() {
         settings: generated.settings,
         folderId: selectedFolderId
       });
+      toast.success('Form schema generated and form created successfully!', 'AI Form Success');
     } catch (err: any) {
       console.error(err);
-      setAiError(err.message || 'AI Form Generation failed. Please verify that GEMINI_API_KEY is configured in backend environment .env file.');
+      const msg = err.message || 'AI Form Generation failed. Please verify that GEMINI_API_KEY is configured in backend environment .env file.';
+      toast.error(msg, 'AI Generation Failed');
+      setAiError(msg);
     } finally {
       setIsGeneratingAI(false);
     }

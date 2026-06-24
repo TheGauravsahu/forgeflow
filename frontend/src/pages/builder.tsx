@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import { FormField, FieldType } from '../types/shared';
 
 // dnd-kit Imports
@@ -143,8 +144,9 @@ export default function BuilderPage() {
     }
   });
 
-  const query = trpc.form.get.useQuery({ id: formId }, { enabled: !!formId });
-  const updateFormMutation = trpc.form.update.useMutation();
+  const toast = useToastStore();
+  const query = api.form.get.useQuery({ id: formId }, { enabled: !!formId });
+  const updateFormMutation = api.form.update.useMutation();
 
   useEffect(() => {
     if (query.data && !isLoaded) {
@@ -170,7 +172,8 @@ export default function BuilderPage() {
           settings: formSettings,
           published: formPublished
         });
-      } catch (e) {
+      } catch (e: any) {
+        toast.error(e.message || 'Error autosaving form', 'Autosave Failed');
         console.error('Error autosaving form:', e);
       } finally {
         setIsSaving(false);
@@ -179,7 +182,7 @@ export default function BuilderPage() {
     return () => clearTimeout(timer);
   }, [fields, formTitle, formDesc, formSettings, formPublished, formId, isLoaded]);
 
-  const generateThemeMutation = trpc.ai.generateTheme.useMutation();
+  const generateThemeMutation = api.ai.generateTheme.useMutation();
 
   const handleGenerateThemeAI = async () => {
     if (!aiThemePrompt.trim()) return;
@@ -199,9 +202,12 @@ export default function BuilderPage() {
         }
       });
       setAiThemePrompt('');
+      toast.success('New theme generated and applied successfully.', 'AI Theme Styling');
     } catch (err: any) {
       console.error(err);
-      setAiThemeError(err.message || 'AI theme generation failed. Please check GEMINI_API_KEY config.');
+      const msg = err.message || 'AI theme generation failed. Please check GEMINI_API_KEY config.';
+      toast.error(msg, 'AI Theme Failed');
+      setAiThemeError(msg);
     } finally {
       setIsGeneratingTheme(false);
     }

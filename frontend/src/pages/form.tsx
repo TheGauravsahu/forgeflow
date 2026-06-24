@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { buildFormZodSchema, FormField, FormSettings } from '../types/shared';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import {
   Star,
   Upload,
@@ -236,14 +237,15 @@ export default function PublicFormPage() {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const [honeypot, setHoneypot] = useState('');
+  const toast = useToastStore();
 
   // Fetch Form spec (public route)
-  const { data: form, isLoading, error } = trpc.form.getPublic.useQuery(
+  const { data: form, isLoading, error } = api.form.getPublic.useQuery(
     { id: formId },
     { enabled: !!formId, retry: false }
   );
 
-  const submitMutation = trpc.submission.submit.useMutation();
+  const submitMutation = api.submission.submit.useMutation();
 
   // Create full validation schema
   const fields = ((form?.schema as unknown) as FormField[]) || [];
@@ -293,8 +295,10 @@ export default function PublicFormPage() {
         data: filteredData,
         honeypot
       });
+      toast.success('Your answers have been submitted successfully.', 'Submission Received');
       setSubmitted(true);
     } catch (err: any) {
+      toast.error(err.message || 'Submission failed. Please try again.', 'Submission Error');
       setSubmissionError(err.message || 'Submission failed. Please check your answers and try again.');
     }
   };

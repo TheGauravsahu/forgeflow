@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import { FORM_TEMPLATES } from '../lib/templates';
 import * as Icons from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
+  const toast = useToastStore();
 
   useEffect(() => {
     const token = localStorage.getItem('forgeflow_token');
@@ -20,7 +22,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  const createFormMutation = trpc.form.create.useMutation();
+  const createFormMutation = api.form.create.useMutation();
 
   const handleUseTemplate = async (templateId: string) => {
     const template = FORM_TEMPLATES.find((t) => t.id === templateId);
@@ -42,7 +44,8 @@ export default function LandingPage() {
         settings: template.settings
       });
       navigate(`/builder/${form.id}`);
-    } catch (err) {
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create form from template. Please try again.', 'Template Error');
       console.error('Failed to create form from template:', err);
     } finally {
       setLoadingTemplateId(null);

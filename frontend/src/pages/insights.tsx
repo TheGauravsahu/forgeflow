@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import { FormField } from '../types/shared';
 import {
   XAxis,
@@ -110,8 +111,9 @@ export default function InsightsPage() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
   const [aiAnalysisError, setAiAnalysisError] = useState<string | null>(null);
+  const toast = useToastStore();
 
-  const analyzeSubmissionsMutation = trpc.ai.analyzeSubmissions.useMutation();
+  const analyzeSubmissionsMutation = api.ai.analyzeSubmissions.useMutation();
 
   const handleGenerateAnalysis = async () => {
     setIsGeneratingAnalysis(true);
@@ -121,9 +123,12 @@ export default function InsightsPage() {
         formId
       });
       setAiAnalysis(result.analysis);
+      toast.success('AI analysis generated successfully!', 'Report Compiled');
     } catch (err: any) {
       console.error(err);
-      setAiAnalysisError(err.message || 'Analysis failed. Please verify that GEMINI_API_KEY is configured in backend environment .env file.');
+      const msg = err.message || 'Analysis failed. Please verify that GEMINI_API_KEY is configured in backend environment .env file.';
+      toast.error(msg, 'AI Report Failed');
+      setAiAnalysisError(msg);
     } finally {
       setIsGeneratingAnalysis(false);
     }
@@ -156,9 +161,9 @@ export default function InsightsPage() {
   };
 
   // Queries
-  const formQuery = trpc.form.get.useQuery({ id: formId }, { enabled: !!formId });
-  const analyticsQuery = trpc.submission.getAnalytics.useQuery({ formId }, { enabled: !!formId });
-  const listQuery = trpc.submission.list.useQuery(
+  const formQuery = api.form.get.useQuery({ id: formId }, { enabled: !!formId });
+  const analyticsQuery = api.submission.getAnalytics.useQuery({ formId }, { enabled: !!formId });
+  const listQuery = api.submission.list.useQuery(
     {
       formId,
       take: itemsPerPage,
@@ -173,9 +178,10 @@ export default function InsightsPage() {
 
   // CSV Export URL
   const apiBase =
-    (import.meta.env.VITE_API_URL as string)?.replace('/trpc', '') ||
-    'http://localhost:3001';
-  const exportUrl = `${apiBase}/api/forms/${formId}/export-csv?token=${localStorage.getItem('forgeflow_token')}`;
+    (import.meta.env.VITE_API_URL as string) ||
+    'http://localhost:3001/api';
+  const basePrefix = apiBase.replace('/trpc', '').replace('/api', '') + '/api';
+  const exportUrl = `${basePrefix}/forms/${formId}/export-csv?token=${localStorage.getItem('forgeflow_token')}`;
 
   const fields = ((form?.schema as unknown) as FormField[]) || [];
   const activeFields = fields.filter(

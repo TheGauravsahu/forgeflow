@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import {
   Sparkles,
   LayoutGrid,
@@ -31,9 +32,7 @@ export default function SettingsPage() {
   const [securitySuccess, setSecuritySuccess] = useState('');
   const [securityError, setSecurityError] = useState('');
 
-
-
-
+  const toast = useToastStore();
 
   // Load User details
   useEffect(() => {
@@ -53,8 +52,9 @@ export default function SettingsPage() {
   }, [navigate]);
 
   // Mutations
-  const updatePasswordMutation = trpc.auth.update.useMutation({
+  const updatePasswordMutation = api.auth.update.useMutation({
     onSuccess: () => {
+      toast.success('Your account password has been updated.', 'Password Changed');
       setSecuritySuccess('Password updated successfully!');
       setSecurityError('');
       setCurrentPassword('');
@@ -62,7 +62,8 @@ export default function SettingsPage() {
       setConfirmPassword('');
       setTimeout(() => setSecuritySuccess(''), 3000);
     },
-    onError: (err) => {
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to update password.', 'Password Change Failed');
       setSecurityError(err.message || 'Failed to update password.');
       setSecuritySuccess('');
     }

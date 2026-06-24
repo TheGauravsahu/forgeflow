@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trpc } from '../lib/trpc';
+import { api } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 import {
   LogIn,
   UserPlus,
@@ -40,8 +41,10 @@ export default function AuthPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const loginMutation = trpc.auth.login.useMutation();
-  const registerMutation = trpc.auth.register.useMutation();
+  const toast = useToastStore();
+
+  const loginMutation = api.auth.login.useMutation();
+  const registerMutation = api.auth.register.useMutation();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -61,17 +64,21 @@ export default function AuthPage() {
         const res = await loginMutation.mutateAsync({ email, password });
         localStorage.setItem('forgeflow_token', res.token);
         localStorage.setItem('forgeflow_user', JSON.stringify(res.user));
+        toast.success('Welcome back to ForgeFlow!', 'Logged in successfully');
         setSuccessMsg('Logged in successfully! Redirecting...');
         setTimeout(() => navigate('/dashboard'), 800);
       } else {
         const res = await registerMutation.mutateAsync({ email, password, name });
         localStorage.setItem('forgeflow_token', res.token);
         localStorage.setItem('forgeflow_user', JSON.stringify(res.user));
+        toast.success('Your workspace is ready!', 'Account created successfully');
         setSuccessMsg('Account created successfully! Redirecting...');
         setTimeout(() => navigate('/dashboard'), 800);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication failed. Please try again.');
+      const msg = err.message || 'Authentication failed. Please try again.';
+      toast.error(msg, 'Authentication Error');
+      setErrorMsg(msg);
     }
   };
 

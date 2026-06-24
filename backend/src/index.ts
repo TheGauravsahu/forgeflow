@@ -1,21 +1,25 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { createExpressMiddleware } from '@trpc/server/adapters/express';
-import { createOpenApiExpressMiddleware, generateOpenApiDocument } from 'trpc-openapi';
-import { apiReference } from '@scalar/express-api-reference';
-import { appRouter, AppRouter } from './routers/_app';
-import { createContext } from './context';
 import { db } from './db';
 import { verifyToken } from './auth';
 import { FormField } from './types/shared';
+import { securityHeaders, rateLimit } from './middleware/auth';
 
-export type { AppRouter };
+// Router imports
+import { authRouter } from './routes/auth';
+import { formsRouter } from './routes/forms';
+import { foldersRouter } from './routes/folders';
+import { submissionsRouter } from './routes/submissions';
+import { aiRouter } from './routes/ai';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Apply security headers
+app.use(securityHeaders);
 
 app.use(cors({
   origin: '*',
@@ -24,16 +28,17 @@ app.use(cors({
 
 app.use(express.json());
 
-// tRPC Express Adapter binding
-app.use(
-  '/trpc',
-  createExpressMiddleware({
-    router: appRouter,
-    createContext,
-  })
-);
+// Global API rate limiting (max 100 requests per minute per IP)
+app.use('/api', rateLimit(100, 60000));
 
-// Direct CSV Export Endpoint
+// Mount REST API routers
+app.use('/api/auth', authRouter);
+app.use('/api/forms', formsRouter);
+app.use('/api/folders', foldersRouter);
+app.use('/api/submissions', submissionsRouter);
+app.use('/api/ai', aiRouter);
+
+// Direct CSV Export Endpoint (remains under forms namespace or top-level)
 app.get('/api/forms/:formId/export-csv', async (req, res) => {
   const { formId } = req.params;
   const token = (req.query.token as string) || req.headers.authorization?.split(' ')[1];
@@ -91,45 +96,10 @@ app.get('/api/forms/:formId/export-csv', async (req, res) => {
   }
 });
 
-// OpenAPI Express Adapter binding
-app.use(
-  '/api',
-  createOpenApiExpressMiddleware({
-    router: appRouter,
-    createContext,
-  })
-);
-
-// Generate OpenAPI Spec
-const openApiDocument = generateOpenApiDocument(appRouter, {
-  title: 'ForgeFlow API',
-  version: '1.0.0',
-  baseUrl: `http://localhost:${PORT}/api`,
-  tags: ['auth', 'form', 'folder', 'submission', 'analytics']
-});
-
-// Serve OpenAPI Spec
-app.get('/openapi.json', (req, res) => {
-  res.json(openApiDocument);
-});
-
-// Scalar API Reference Dashboard
-app.use(
-  '/docs',
-  apiReference({
-    spec: {
-      content: openApiDocument,
-    },
-    theme: 'kepler'
-  })
-);
-
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📄 API Document running on http://localhost:${PORT}/docs`);
-  console.log(`🔍 OpenAPI configuration available on http://localhost:${PORT}/openapi.json`);
 });

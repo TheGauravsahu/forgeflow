@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink } from '@trpc/client';
-import { trpc } from './lib/trpc';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from './components/Toaster';
+import { AuthGuard } from './components/AuthGuard';
 
 // Page imports
 import LandingPage from './pages/landing';
@@ -25,39 +25,24 @@ export default function App() {
     }
   }));
 
-  const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchLink({
-          url: (import.meta.env.VITE_API_URL as string) || 'http://localhost:3001/trpc',
-          headers() {
-            const token = localStorage.getItem('forgeflow_token');
-            return token ? { Authorization: `Bearer ${token}` } : {};
-          }
-        })
-      ]
-    } as any)
-  );
-
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/builder/:id" element={<BuilderPage />} />
-              <Route path="/insights/:id" element={<InsightsPage />} />
-              <Route path="/form/:id" element={<PublicFormPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/dashboard" element={<AuthGuard><DashboardPage /></AuthGuard>} />
+            <Route path="/builder/:id" element={<AuthGuard><BuilderPage /></AuthGuard>} />
+            <Route path="/insights/:id" element={<AuthGuard><InsightsPage /></AuthGuard>} />
+            <Route path="/form/:id" element={<PublicFormPage />} />
+            <Route path="/profile" element={<AuthGuard><ProfilePage /></AuthGuard>} />
+            <Route path="/settings" element={<AuthGuard><SettingsPage /></AuthGuard>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
