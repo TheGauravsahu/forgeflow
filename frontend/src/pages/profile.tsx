@@ -12,7 +12,8 @@ import {
   Inbox,
   Save,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,9 @@ export default function ProfilePage() {
   const [email, setEmail] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Responsiveness State
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Fetch token and current user
   useEffect(() => {
@@ -129,9 +133,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#09090b] text-zinc-100 overflow-hidden">
-      {/* ─── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
-      <aside className="w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
+    <div className="flex h-screen bg-[#09090b] text-zinc-100 overflow-hidden font-sans">
+      {/* ─── LEFT SIDEBAR (DESKTOP) ─────────────────────────────────────────── */}
+      <aside className="hidden md:flex w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
         {/* Logo */}
         <div
           onClick={() => navigate('/dashboard')}
@@ -191,19 +195,125 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+      </aside>      {/* ─── LEFT SIDEBAR (MOBILE DRAWER) ───────────────────────────────────── */}
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${
+          isMobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMobileSidebarOpen(false)}
+      />
+      {/* Sidebar Drawer */}
+      <aside
+        className={`fixed inset-y-0 left-0 w-[240px] bg-zinc-950 border-r border-zinc-800/60 z-50 flex flex-col md:hidden transition-transform duration-300 ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Logo */}
+        <div
+          onClick={() => {
+            navigate('/dashboard');
+            setIsMobileSidebarOpen(false);
+          }}
+          className="h-14 flex items-center justify-between px-5 border-b border-zinc-800/60 cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <Sparkles className="w-4 h-4 text-zinc-900" />
+            </div>
+            <span className="font-black text-base text-white tracking-tight">ForgeFlow</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMobileSidebarOpen(false);
+            }}
+            className="text-zinc-500 hover:text-white cursor-pointer border-0 bg-transparent"
+          >
+            <Menu className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Sidebar Nav */}
+        <div className="flex-1 px-3 py-4 space-y-1">
+          <button
+            onClick={() => {
+              navigate('/dashboard');
+              setIsMobileSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all border-0 bg-transparent cursor-pointer text-left"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span>Dashboard</span>
+          </button>
+
+          <button
+            onClick={() => {
+              navigate('/profile');
+              setIsMobileSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500/15 text-amber-400 border border-amber-500/20 transition-all border-0 bg-transparent cursor-pointer text-left"
+          >
+            <User className="w-4 h-4" />
+            <span>Profile</span>
+          </button>
+
+          <button
+            onClick={() => {
+              navigate('/settings');
+              setIsMobileSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all border-0 bg-transparent cursor-pointer text-left"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Settings</span>
+          </button>
+        </div>
+
+        {/* User Footer */}
+        <div className="p-3 border-t border-zinc-800/60">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/40 transition-colors group">
+            <Avatar className="w-8 h-8 border border-amber-500/30">
+              <AvatarFallback className="bg-amber-500/15 text-amber-400 text-xs font-bold">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate leading-tight">{name || 'Developer'}</p>
+              <p className="text-[10px] text-zinc-600 truncate">Creator</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded-md transition-all border-0 bg-transparent cursor-pointer"
+              title="Log Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* ─── MAIN CONTENT ─────────────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto bg-zinc-950/20 p-8">
+      <main className="flex-1 overflow-y-auto bg-zinc-950/20 p-6 md:p-8">
         <div className="max-w-4xl mx-auto space-y-8">
           
           {/* Header */}
-          <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Account Profile</h1>
-            <p className="text-sm text-zinc-500 mt-1">Manage your public identity and track form creation statistics.</p>
-          </div>
-
-          <Separator className="bg-zinc-800/60" />
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-850 rounded-lg cursor-pointer border-0 bg-transparent"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tight">Account Profile</h1>
+              <p className="text-sm text-zinc-500 mt-1">Manage your public identity and track form creation statistics.</p>
+            </div>
+          </div>          <Separator className="bg-zinc-800/60" />
 
           {isLoading ? (
             <div className="space-y-6">

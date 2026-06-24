@@ -244,23 +244,12 @@ export default function SettingsPage() {
               >
                 Security & Access
               </TabsTrigger>
-              <TabsTrigger
-                value="preferences"
-                className="rounded-lg text-xs font-bold uppercase tracking-wider text-zinc-400 px-4 py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-zinc-950 transition-all cursor-pointer"
-              >
-                Preferences
-              </TabsTrigger>
-              <TabsTrigger
-                value="developer"
-                className="rounded-lg text-xs font-bold uppercase tracking-wider text-zinc-400 px-4 py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-zinc-950 transition-all cursor-pointer"
-              >
-                Developer API
-              </TabsTrigger>
+ 
             </TabsList>
 
             {/* TAB CONTENT: SECURITY */}
             <TabsContent value="security" className="space-y-6 outline-none">
-              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit">
+              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit p-4">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-white flex items-center gap-2">
                     <Lock className="w-4 h-4 text-amber-500" />
@@ -340,144 +329,9 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            {/* TAB CONTENT: PREFERENCES */}
-            <TabsContent value="preferences" className="space-y-6 outline-none">
-              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-amber-500" />
-                    System Preferences
-                  </CardTitle>
-                  <p className="text-xs text-zinc-500">Configure notification alerts, auto-save states, and workspace behaviors.</p>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <form onSubmit={handleSavePreferences} className="space-y-6 max-w-xl">
-                    
-                    {/* Toggle: Email Digest */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-900/60 border border-zinc-800/60 rounded-xl">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <Bell className="w-4 h-4 text-zinc-500" />
-                          Email Digest Notifications
-                        </Label>
-                        <p className="text-xs text-zinc-500">Receive a weekly analytical report detailing form submission metrics.</p>
-                      </div>
-                      <Switch checked={emailNotif} onCheckedChange={setEmailNotif} />
-                    </div>
+   
 
-                    {/* Toggle: Submission alerts */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-900/60 border border-zinc-800/60 rounded-xl">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <Bell className="w-4 h-4 text-zinc-500" />
-                          Instant Submission Alerts
-                        </Label>
-                        <p className="text-xs text-zinc-500">Receive an email immediately when a public user submits your form.</p>
-                      </div>
-                      <Switch checked={submissionNotif} onCheckedChange={setSubmissionNotif} />
-                    </div>
-
-                    {/* Toggle: Auto-save builder */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-900/60 border border-zinc-800/60 rounded-xl">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <Sliders className="w-4 h-4 text-zinc-500" />
-                          Auto-save Workspace
-                        </Label>
-                        <p className="text-xs text-zinc-500">Enable automatic background saving while designing schemas in the builder.</p>
-                      </div>
-                      <Switch checked={autoSave} onCheckedChange={setAutoSave} />
-                    </div>
-
-                    {/* Feedback */}
-                    {prefSuccess && (
-                      <div className="flex items-center gap-2.5 p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-medium">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>{prefSuccess}</span>
-                      </div>
-                    )}
-
-                    <Button type="submit" className="bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold transition-all">
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Preferences
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* TAB CONTENT: DEVELOPER */}
-            <TabsContent value="developer" className="space-y-6 outline-none">
-              <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl h-fit">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                    <Key className="w-4 h-4 text-amber-500" />
-                    API Secret Keys
-                  </CardTitle>
-                  <p className="text-xs text-zinc-500">Use this token to query submissions and manage form schemas programmatically via HTTP.</p>
-                </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-zinc-300">Live API Key</Label>
-                    <div className="flex gap-2 max-w-xl">
-                      <div className="relative flex-1">
-                        <Input
-                          readOnly
-                          value={apiKey}
-                          className="font-mono bg-zinc-900 text-xs text-amber-400 border-zinc-800 pr-10 focus:ring-0 focus:border-zinc-800 select-all"
-                        />
-                        <button
-                          onClick={handleCopyKey}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-white rounded"
-                        >
-                          {copiedKey ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        onClick={handleRegenerateKey}
-                        className="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-800 text-xs gap-1 cursor-pointer"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        Regenerate
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Separator className="bg-zinc-800/60" />
-
-                  {/* Webhooks Section */}
-                  <form onSubmit={handleWebhookSubmit} className="space-y-4 max-w-xl">
-                    <div className="space-y-2">
-                      <Label className="text-base font-bold text-white flex items-center gap-2">
-                        <Webhook className="w-4 h-4 text-amber-500" />
-                        Global Webhook URL
-                      </Label>
-                      <p className="text-xs text-zinc-500">ForgeFlow will send a JSON POST request to this endpoint every time a submission is received.</p>
-                      <Input
-                        type="url"
-                        value={webhookUrl}
-                        onChange={(e) => setWebhookUrl(e.target.value)}
-                        placeholder="https://yourdomain.com/webhooks/forgeflow"
-                        className="bg-zinc-900/80 border-zinc-800 text-sm text-white focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/20"
-                      />
-                    </div>
-
-                    {/* Messages */}
-                    {webhookSuccess && (
-                      <div className="flex items-center gap-2.5 p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-medium">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>{webhookSuccess}</span>
-                      </div>
-                    )}
-
-                    <Button type="submit" className="bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold transition-all">
-                      Configure Webhook
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
+      
 
           </Tabs>
 

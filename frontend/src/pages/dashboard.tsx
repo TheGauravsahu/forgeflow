@@ -28,6 +28,7 @@ import {
   ArrowUpDown,
   Calendar,
   TrendingUp,
+  Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,6 +79,15 @@ export default function DashboardPage() {
   const [newFormTitle, setNewFormTitle] = useState('');
   const [newFormDesc, setNewFormDesc] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('blank');
+
+  // AI Creation State
+  const [creationTab, setCreationTab] = useState<'template' | 'ai'>('template');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Responsiveness State
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -132,9 +142,14 @@ export default function DashboardPage() {
       setNewFormTitle('');
       setNewFormDesc('');
       setSelectedTemplateId('blank');
+      setAiPrompt('');
+      setCreationTab('template');
+      setAiError(null);
       navigate(`/builder/${data.id}`);
     }
   });
+
+  const generateFormMutation = trpc.ai.generateForm.useMutation();
 
   // Instantiate pending template if chosen from landing page
   useEffect(() => {
@@ -226,6 +241,33 @@ export default function DashboardPage() {
       schema,
       settings
     });
+  };
+
+  const handleCreateFormAI = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiPrompt.trim()) return;
+
+    setIsGeneratingAI(true);
+    setAiError(null);
+
+    try {
+      const generated = await generateFormMutation.mutateAsync({
+        prompt: aiPrompt
+      });
+
+      await createFormMutation.mutateAsync({
+        title: generated.title,
+        description: generated.description,
+        schema: generated.fields,
+        settings: generated.settings,
+        folderId: selectedFolderId
+      });
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err.message || 'AI Form Generation failed. Please verify that GEMINI_API_KEY is configured in backend environment .env file.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const handleCreateFolder = async (e: React.FormEvent) => {
@@ -335,11 +377,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#09090b] text-zinc-100 overflow-hidden font-sans">
-
-      {/* ─── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
-      <aside className="w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
-
+    <div className="flex h-screen bg-[#09090b] text-zinc-100 overflow-hidden font-sans">      {/* ─── LEFT SIDEBAR (DESKTOP) ─────────────────────────────────────────── */}
+      <aside className="hidden md:flex w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
         {/* Logo */}
         <div className="h-14 flex items-center gap-2.5 px-5 border-b border-zinc-800/60">
           <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
@@ -509,18 +548,231 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* ─── MAIN CONTENT ─────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-zinc-950/20">
+      {/* ─── LEFT SIDEBAR (MOBILE DRAWER) ───────────────────────────────────── */}
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${
+          isMobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMobileSidebarOpen(false)}
+      />
+      {/* Sidebar Drawer */}
+      <aside
+        className={`fixed inset-y-0 left-0 w-[240px] bg-zinc-950 border-r border-zinc-800/60 z-50 flex flex-col md:hidden transition-transform duration-300 ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Logo */}
+        <div className="h-14 flex items-center justify-between px-5 border-b border-zinc-800/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <Sparkles className="w-4 h-4 text-zinc-900" />
+            </div>
+            <span className="font-black text-base text-white tracking-tight">ForgeFlow</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="text-zinc-500 hover:text-white cursor-pointer border-0 bg-transparent"
+          >
+            <Menu className="w-4 h-4" />
+          </Button>
+        </div>
 
-        {/* Top Header */}
-        <header className="h-14 border-b border-zinc-800/60 bg-zinc-950/50 backdrop-blur-sm px-6 flex items-center justify-between flex-shrink-0">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 text-xs text-zinc-600">
-            <span className="font-medium">Dashboard</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-zinc-300 font-semibold">{currentSectionLabel}</span>
+        {/* Nav Items */}
+        <ScrollArea className="flex-1 px-3 py-4">
+          <div className="space-y-0.5 mb-6">
+            <button
+              onClick={() => {
+                setSelectedFolderId(null);
+                setShowArchived(false);
+                setIsMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedFolderId === null && !showArchived
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                  : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4 flex-shrink-0" />
+              <span>All Forms</span>
+              {selectedFolderId === null && !showArchived && (
+                <span className="ml-auto text-[10px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">
+                  {formsQuery.data?.length ?? 0}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedFolderId(null);
+                setShowArchived(true);
+                setIsMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                showArchived
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                  : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+              }`}
+            >
+              <Archive className="w-4 h-4 flex-shrink-0" />
+              <span>Archived</span>
+            </button>
           </div>
 
+          <Separator className="bg-zinc-800/60 mb-4" />
+
+          {/* Folders Section */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between px-1 mb-2">
+              <span className="text-[10px] font-bold text-zinc-650 uppercase tracking-widest">Folders</span>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => {
+                  setIsCreateFolderOpen(true);
+                  setIsMobileSidebarOpen(false);
+                }}
+                className="text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="New Folder"
+              >
+                <FolderPlus className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+
+            {foldersQuery.isLoading ? (
+              <div className="px-3 py-2 text-xs text-zinc-600 animate-pulse">Loading folders…</div>
+            ) : foldersQuery.data?.length === 0 ? (
+              <div className="px-3 py-3 text-xs text-zinc-600 italic text-center border border-dashed border-zinc-800 rounded-lg">
+                No folders yet
+              </div>
+            ) : (
+              foldersQuery.data?.map((folder) => (
+                <div
+                  key={folder.id}
+                  className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    selectedFolderId === folder.id && !showArchived
+                      ? 'bg-amber-500/12 text-amber-300 border border-amber-500/20'
+                      : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                  }`}
+                >
+                  <button
+                    onClick={() => {
+                      setSelectedFolderId(folder.id);
+                      setShowArchived(false);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className="flex-1 flex items-center gap-2 text-left min-w-0 cursor-pointer border-0 bg-transparent text-inherit p-0"
+                  >
+                    <FolderOpen className={`w-4 h-4 flex-shrink-0 ${selectedFolderId === folder.id && !showArchived ? 'text-amber-400' : 'text-zinc-500'}`} />
+                    <span className="truncate">{folder.name}</span>
+                    <span className="ml-auto text-[10px] font-bold text-zinc-500 px-1.5 py-0.5 rounded bg-zinc-900 group-hover:bg-zinc-800 transition-colors">
+                      {folder._count.forms}
+                    </span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFolderToDeleteId(folder.id);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className="opacity-100 p-1 ml-1 text-zinc-650 hover:text-red-400 rounded transition-all cursor-pointer border-0 bg-transparent"
+                    title="Delete Folder"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Create Folder CTA */}
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateFolderOpen(true);
+                setIsMobileSidebarOpen(false);
+              }}
+              className="w-full flex items-center justify-start gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 border border-dashed border-zinc-800 hover:border-amber-500/40 hover:text-amber-400 hover:bg-amber-500/5 transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Folder
+            </Button>
+          </div>
+        </ScrollArea>
+
+        {/* User Footer */}
+        <div className="p-3 border-t border-zinc-800/60">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/40 transition-colors group cursor-pointer text-left outline-none border-0 bg-transparent">
+                <Avatar className="w-8 h-8 border border-amber-500/30">
+                  <AvatarFallback className="bg-amber-500/15 text-amber-400 text-xs font-bold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate leading-tight">{userName}</p>
+                  <p className="text-[10px] text-zinc-600 truncate">Creator</p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48 bg-zinc-900 border-zinc-800 text-zinc-300 rounded-xl p-1 shadow-2xl" align="end" side="top">
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate('/profile');
+                  setIsMobileSidebarOpen(false);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-zinc-800 hover:text-white cursor-pointer transition-colors focus:bg-zinc-800 focus:text-white outline-none"
+              >
+                <User className="w-4 h-4 text-zinc-500" />
+                <span>My Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate('/settings');
+                  setIsMobileSidebarOpen(false);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-zinc-800 hover:text-white cursor-pointer transition-colors focus:bg-zinc-800 focus:text-white outline-none"
+              >
+                <Settings className="w-4 h-4 text-zinc-500" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-zinc-800/60 my-1" />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors focus:bg-red-500/10 focus:text-red-400 outline-none"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+
+      {/* ─── MAIN CONTENT ─────────────────────────────────────────────────── */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-zinc-950/20">        {/* Top Header */}
+        <header className="h-14 border-b border-zinc-800/60 bg-zinc-950/50 backdrop-blur-sm px-6 flex items-center justify-between flex-shrink-0">
+          {/* Mobile hamburger & Breadcrumb */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/40 rounded-lg cursor-pointer border-0 bg-transparent"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
+            
+            <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+              <span className="font-medium">Dashboard</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-zinc-300 font-semibold">{currentSectionLabel}</span>
+            </div>
+          </div>
           {/* Actions */}
           <div className="flex items-center gap-3">
             {/* Search */}
@@ -1271,107 +1523,208 @@ export default function DashboardPage() {
             </div>
           </DialogHeader>
 
-          <form onSubmit={handleCreateForm} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
-                  Form Title <span className="text-amber-500">*</span>
-                </label>
-                <input
-                  id="input-form-title"
-                  type="text"
-                  required
-                  placeholder="e.g. Feedback Survey"
-                  value={newFormTitle}
-                  onChange={(e) => setNewFormTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-650 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/15 transition-all"
-                />
+          <div className="flex border-b border-zinc-800/80 mb-2">
+            <button
+              type="button"
+              onClick={() => setCreationTab('template')}
+              className={`flex-1 pb-2.5 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer bg-transparent border-t-0 border-x-0 outline-none ${
+                creationTab === 'template'
+                  ? 'border-amber-500 text-amber-400'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Template Gallery
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreationTab('ai')}
+              className={`flex-1 pb-2.5 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer bg-transparent border-t-0 border-x-0 outline-none ${
+                creationTab === 'ai'
+                  ? 'border-amber-500 text-amber-400'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Prompt Creator ✨
+            </button>
+          </div>
+
+          {creationTab === 'template' ? (
+            <form onSubmit={handleCreateForm} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
+                    Form Title <span className="text-amber-500">*</span>
+                  </label>
+                  <input
+                    id="input-form-title"
+                    type="text"
+                    required
+                    placeholder="e.g. Feedback Survey"
+                    value={newFormTitle}
+                    onChange={(e) => setNewFormTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-650 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/15 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
+                    Description
+                  </label>
+                  <input
+                    id="input-form-desc"
+                    placeholder="Brief purpose of this form…"
+                    value={newFormDesc}
+                    onChange={(e) => setNewFormDesc(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-655 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/15 transition-all"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
-                  Description
+                  Choose Form Layout / Template
                 </label>
-                <input
-                  id="input-form-desc"
-                  placeholder="Brief purpose of this form…"
-                  value={newFormDesc}
-                  onChange={(e) => setNewFormDesc(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-655 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/15 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
-                Choose Form Layout / Template
-              </label>
-              <ScrollArea className="h-64 pr-2">
-                <div className="grid grid-cols-2 gap-2.5 p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTemplateId('blank')}
-                    className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                      selectedTemplateId === 'blank'
-                        ? 'bg-amber-500/10 border-amber-500/50 text-white'
-                        : 'bg-zinc-950 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-zinc-800/50 flex items-center justify-center flex-shrink-0">
-                      <Plus className="w-4 h-4 text-zinc-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-xs font-bold block text-white">Start from Scratch</span>
-                      <span className="text-[10px] text-zinc-500 block mt-0.5 leading-tight">Blank Canvas</span>
-                    </div>
-                  </button>
-                  {FORM_TEMPLATES.map((t) => (
+                <ScrollArea className="h-64 pr-2">
+                  <div className="grid grid-cols-2 gap-2.5 p-0.5">
                     <button
-                      key={t.id}
                       type="button"
-                      onClick={() => {
-                        setSelectedTemplateId(t.id);
-                        if (!newFormTitle.trim() || newFormTitle === 'Blank Form') {
-                          setNewFormTitle(t.title);
-                        }
-                      }}
+                      onClick={() => setSelectedTemplateId('blank')}
                       className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        selectedTemplateId === t.id
+                        selectedTemplateId === 'blank'
                           ? 'bg-amber-500/10 border-amber-500/50 text-white'
                           : 'bg-zinc-950 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
                       }`}
                     >
-                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-amber-500">
-                        <Sparkles className="w-3.5 h-3.5" />
+                      <div className="w-7 h-7 rounded-lg bg-zinc-800/50 flex items-center justify-center flex-shrink-0">
+                        <Plus className="w-4 h-4 text-zinc-400" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-bold block truncate text-white">{t.title}</span>
-                        <span className="text-[10px] text-zinc-500 block mt-0.5 truncate leading-tight">{t.description}</span>
+                        <span className="text-xs font-bold block text-white">Start from Scratch</span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5 leading-tight">Blank Canvas</span>
                       </div>
+                    </button>
+                    {FORM_TEMPLATES.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTemplateId(t.id);
+                          if (!newFormTitle.trim() || newFormTitle === 'Blank Form') {
+                            setNewFormTitle(t.title);
+                          }
+                        }}
+                        className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          selectedTemplateId === t.id
+                            ? 'bg-amber-500/10 border-amber-500/50 text-white'
+                            : 'bg-zinc-950 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
+                        }`}
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-amber-500">
+                          <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold block truncate text-white">{t.title}</span>
+                          <span className="text-[10px] text-zinc-500 block mt-0.5 truncate leading-tight">{t.description}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              <DialogFooter className="pt-2 gap-2 flex-row justify-end border-t border-zinc-800/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateFormOpen(false)}
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-semibold rounded-xl transition-all border-0 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="btn-submit-create-form"
+                  type="submit"
+                  disabled={createFormMutation.isLoading}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-zinc-900 text-sm font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all border-0 cursor-pointer"
+                >
+                  {createFormMutation.isLoading ? 'Creating…' : 'Create Form'}
+                </button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <form onSubmit={handleCreateFormAI} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block">
+                  Describe what you want to build
+                </label>
+                <textarea
+                  id="textarea-ai-prompt"
+                  rows={4}
+                  required
+                  placeholder="e.g. A customer satisfaction survey with rating, feedback, and user details..."
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-650 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/15 transition-all resize-none font-sans"
+                />
+              </div>
+
+              {/* Suggestions */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block">Suggestions</span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    'Customer Satisfaction Survey',
+                    'Event Registration Form',
+                    'Job Application Form',
+                    'Newsletter Signup'
+                  ].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setAiPrompt(`Create a ${p.toLowerCase()}`)}
+                      className="px-2.5 py-1 bg-zinc-950 hover:bg-zinc-800 border border-zinc-805 hover:border-zinc-700 text-zinc-400 hover:text-zinc-205 text-xs rounded-lg transition-all cursor-pointer"
+                    >
+                      {p}
                     </button>
                   ))}
                 </div>
-              </ScrollArea>
-            </div>
+              </div>
 
-            <DialogFooter className="pt-2 gap-2 flex-row justify-end border-t border-zinc-800/60 pt-3">
-              <button
-                type="button"
-                onClick={() => setIsCreateFormOpen(false)}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-semibold rounded-xl transition-all border-0 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                id="btn-submit-create-form"
-                type="submit"
-                disabled={createFormMutation.isLoading}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-zinc-900 text-sm font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all border-0 cursor-pointer"
-              >
-                {createFormMutation.isLoading ? 'Creating…' : 'Create Form'}
-              </button>
-            </DialogFooter>
-          </form>
+              {aiError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl">
+                  {aiError}
+                </div>
+              )}
+
+              <DialogFooter className="pt-2 gap-2 flex-row justify-end border-t border-zinc-800/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateFormOpen(false)}
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-semibold rounded-xl transition-all border-0 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isGeneratingAI || createFormMutation.isLoading || !aiPrompt.trim()}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-zinc-900 text-sm font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all border-0 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {isGeneratingAI ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-zinc-900 border-t-transparent animate-spin rounded-full"></span>
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-zinc-950" />
+                      Generate & Create Form
+                    </>
+                  )}
+                </button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 

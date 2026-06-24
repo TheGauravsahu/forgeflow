@@ -121,6 +121,15 @@ export default function BuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
 
+  // AI Theme generation state
+  const [aiThemePrompt, setAiThemePrompt] = useState('');
+  const [isGeneratingTheme, setIsGeneratingTheme] = useState(false);
+  const [aiThemeError, setAiThemeError] = useState<string | null>(null);
+
+  // Responsiveness state
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+
   const [formTitle, setFormTitle] = useState('My Custom Form');
   const [formDesc, setFormDesc] = useState('');
   const [formPublished, setFormPublished] = useState(false);
@@ -169,6 +178,34 @@ export default function BuilderPage() {
     }, 1200);
     return () => clearTimeout(timer);
   }, [fields, formTitle, formDesc, formSettings, formPublished, formId, isLoaded]);
+
+  const generateThemeMutation = trpc.ai.generateTheme.useMutation();
+
+  const handleGenerateThemeAI = async () => {
+    if (!aiThemePrompt.trim()) return;
+    setIsGeneratingTheme(true);
+    setAiThemeError(null);
+    try {
+      const themeResult = await generateThemeMutation.mutateAsync({
+        prompt: aiThemePrompt
+      });
+      setFormSettings({
+        ...formSettings,
+        theme: {
+          primaryColor: themeResult.primaryColor,
+          backgroundColor: themeResult.backgroundColor,
+          borderRadius: themeResult.borderRadius,
+          fontFamily: themeResult.fontFamily
+        }
+      });
+      setAiThemePrompt('');
+    } catch (err: any) {
+      console.error(err);
+      setAiThemeError(err.message || 'AI theme generation failed. Please check GEMINI_API_KEY config.');
+    } finally {
+      setIsGeneratingTheme(false);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -332,6 +369,37 @@ export default function BuilderPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Mobile Palette / Properties Toggle Buttons */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setIsLeftSidebarOpen(!isLeftSidebarOpen);
+              setIsRightSidebarOpen(false);
+            }}
+            className={`md:hidden text-xs border-surface-700 gap-1.5 cursor-pointer ${
+              isLeftSidebarOpen ? 'bg-brand-500/20 text-brand-400 border-brand-500/50' : 'bg-surface-800 text-surface-200 hover:bg-surface-700'
+            }`}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Fields
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setIsRightSidebarOpen(!isRightSidebarOpen);
+              setIsLeftSidebarOpen(false);
+            }}
+            className={`md:hidden text-xs border-surface-700 gap-1.5 cursor-pointer ${
+              isRightSidebarOpen ? 'bg-brand-500/20 text-brand-400 border-brand-500/50' : 'bg-surface-800 text-surface-200 hover:bg-surface-700'
+            }`}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Properties
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -369,7 +437,13 @@ export default function BuilderPage() {
       <div className="flex-1 flex overflow-hidden">
 
         {/* LEFT: Field Palette */}
-        <aside className="w-64 bg-surface-900 border-r border-surface-800 flex flex-col overflow-hidden">
+        {/* LEFT BACKDROP */}
+        {isLeftSidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setIsLeftSidebarOpen(false)} />
+        )}
+
+        {/* LEFT: Field Palette */}
+        <aside className={`w-64 bg-surface-900 border-r border-surface-800 flex flex-col overflow-hidden transition-transform duration-305 fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0 ${isLeftSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <div className="p-4 border-b border-surface-800">
             <h3 className="font-bold text-xs text-surface-200 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-brand-400" />
@@ -451,7 +525,13 @@ export default function BuilderPage() {
         </main>
 
         {/* RIGHT: Property Editor */}
-        <aside className="w-72 bg-surface-900 border-l border-surface-800 flex flex-col overflow-hidden">
+        {/* RIGHT BACKDROP */}
+        {isRightSidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setIsRightSidebarOpen(false)} />
+        )}
+
+        {/* RIGHT: Property Editor */}
+        <aside className={`w-72 bg-surface-900 border-l border-surface-800 flex flex-col overflow-hidden transition-transform duration-305 fixed inset-y-0 right-0 z-40 md:relative md:translate-x-0 ${isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
           <div className="p-4 border-b border-surface-800 flex items-center justify-between">
             <h3 className="font-bold text-xs text-surface-200">Properties</h3>
             {selectedField && (
@@ -841,10 +921,44 @@ export default function BuilderPage() {
                 className="w-full px-3.5 py-2 bg-surface-950 border border-surface-700 text-sm text-white rounded-lg focus:outline-none"
               />
             </div>
+
+            <Separator className="bg-surface-800 my-4" />
+
+            <div className="space-y-3">
+              <Label className="text-xs font-bold text-brand-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI Theme Stylist ✨
+              </Label>
+              <p className="text-[10px] text-surface-500">Describe your preferred aesthetic (e.g. "forest spa", "cyberpunk neon", "clean medical clinic", "midnight luxury") to generate custom styles.</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. elegant midnight gold..."
+                  value={aiThemePrompt}
+                  onChange={(e) => setAiThemePrompt(e.target.value)}
+                  className="flex-1 px-3 py-1.5 bg-surface-950 border border-surface-700 text-sm text-white rounded-lg focus:outline-none placeholder-surface-600 font-sans"
+                />
+                <button
+                  type="button"
+                  disabled={isGeneratingTheme || !aiThemePrompt.trim()}
+                  onClick={handleGenerateThemeAI}
+                  className="px-3 py-1.5 bg-brand-500 hover:bg-brand-400 disabled:opacity-50 text-surface-950 font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center gap-1 border-0"
+                >
+                  {isGeneratingTheme ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    'Generate'
+                  )}
+                </button>
+              </div>
+              {aiThemeError && (
+                <p className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">{aiThemeError}</p>
+              )}
+            </div>
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setIsThemeOpen(false)} className="bg-brand-500 hover:bg-brand-400 text-surface-950 font-semibold">
+            <Button onClick={() => setIsThemeOpen(false)} className="bg-brand-500 hover:bg-brand-400 text-surface-950 font-semibold border-0 cursor-pointer">
               Save Settings
             </Button>
           </DialogFooter>
