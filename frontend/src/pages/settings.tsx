@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sparkles,
   LayoutGrid,
   User,
   Settings,
@@ -11,9 +10,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SecuritySettings } from '@/components/profile/SecuritySettings';
+import { AppLogo } from '@/components/ui/AppLogo';
+import { useThemeStore } from '@/store/useThemeStore';
+import { ThemeCustomizer } from '@/components/profile/ThemeCustomizer';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const activeTheme = useThemeStore((state) => state.activeTheme);
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState('Developer');
 
@@ -65,14 +68,14 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen bg-[#09090b] text-zinc-100 overflow-hidden">
       {/* ─── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
-      <aside className="w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
+      <aside className={`w-[240px] flex-shrink-0 flex flex-col theme-sidebar-${activeTheme.sidebarStyle} border-r border-zinc-800/60`}>
         {/* Logo */}
         <div
           onClick={() => navigate('/dashboard')}
           className="h-14 flex items-center gap-2.5 px-5 border-b border-zinc-800/60 cursor-pointer hover:bg-zinc-900/10 transition-colors"
         >
-          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <Sparkles className="w-4 h-4 text-zinc-900" />
+          <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+            <AppLogo className="w-4 h-4 text-zinc-900" size={16} />
           </div>
           <span className="font-black text-base text-white tracking-tight">ForgeFlow</span>
         </div>
@@ -97,7 +100,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => navigate('/settings')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500/15 text-amber-400 border border-amber-500/20 transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-brand-500/15 text-brand-500 border border-brand-500/20 transition-all"
           >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
@@ -107,8 +110,8 @@ export default function SettingsPage() {
         {/* User Footer */}
         <div className="p-3 border-t border-zinc-800/60">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/40 transition-colors group">
-            <Avatar className="w-8 h-8 border border-amber-500/30">
-              <AvatarFallback className="bg-amber-500/15 text-amber-400 text-xs font-bold">
+            <Avatar className="w-8 h-8 border border-brand-500/30">
+              <AvatarFallback className="bg-brand-500/15 text-brand-500 text-xs font-bold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
@@ -143,16 +146,26 @@ export default function SettingsPage() {
             <TabsList className="bg-zinc-900/60 border border-zinc-800 p-1 rounded-xl flex w-fit gap-1">
               <TabsTrigger
                 value="security"
-                className="rounded-lg text-xs font-bold uppercase tracking-wider text-zinc-400 px-4 py-2 data-[state=active]:bg-amber-500 data-[state=active]:text-zinc-950 transition-all cursor-pointer"
+                className="rounded-lg text-xs font-bold uppercase tracking-wider text-zinc-400 px-4 py-2 data-[state=active]:bg-brand-500 data-[state=active]:text-zinc-950 transition-all cursor-pointer"
               >
                 Security & Access
               </TabsTrigger>
- 
+              <TabsTrigger
+                value="appearance"
+                className="rounded-lg text-xs font-bold uppercase tracking-wider text-zinc-400 px-4 py-2 data-[state=active]:bg-brand-500 data-[state=active]:text-zinc-950 transition-all cursor-pointer"
+              >
+                Appearance & Themes
+              </TabsTrigger>
             </TabsList>
 
             {/* TAB CONTENT: SECURITY */}
             <TabsContent value="security" className="space-y-6 outline-none">
               <SecuritySettings />
+            </TabsContent>
+
+            {/* TAB CONTENT: APPEARANCE */}
+            <TabsContent value="appearance" className="space-y-6 outline-none">
+              <ThemeCustomizer />
             </TabsContent>
 
    

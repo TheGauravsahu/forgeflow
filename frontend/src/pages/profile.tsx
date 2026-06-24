@@ -3,23 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/useToastStore';
 import {
-  Sparkles,
   LayoutGrid,
   User,
   Settings,
   LogOut,
   Layers,
   Inbox,
-  Menu
+  Menu,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ProfileDetails } from '@/components/profile/ProfileDetails';
+import { AppLogo } from '@/components/ui/AppLogo';
+import { useThemeStore } from '@/store/useThemeStore';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const activeTheme = useThemeStore((state) => state.activeTheme);
   const [token, setToken] = useState<string | null>(null);
 
   // Profile Form State
@@ -123,8 +126,8 @@ export default function ProfilePage() {
       <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-12 h-12">
-            <span className="absolute inset-0 rounded-full border-4 border-amber-500/20" />
-            <span className="absolute inset-0 rounded-full border-4 border-amber-500 border-t-transparent animate-spin" />
+            <span className="absolute inset-0 rounded-full border-4 border-brand-500/20" />
+            <span className="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
           </div>
           <p className="text-sm text-zinc-500 font-medium">Loading workspace…</p>
         </div>
@@ -135,14 +138,14 @@ export default function ProfilePage() {
   return (
     <div className="flex h-screen bg-[#09090b] text-zinc-100 overflow-hidden font-sans">
       {/* ─── LEFT SIDEBAR (DESKTOP) ─────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
+      <aside className={`hidden md:flex w-[240px] flex-shrink-0 flex flex-col theme-sidebar-${activeTheme.sidebarStyle} border-r border-zinc-800/60`}>
         {/* Logo */}
         <div
           onClick={() => navigate('/dashboard')}
           className="h-14 flex items-center gap-2.5 px-5 border-b border-zinc-800/60 cursor-pointer hover:bg-zinc-900/10 transition-colors"
         >
-          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <Sparkles className="w-4 h-4 text-zinc-900" />
+          <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+            <AppLogo className="w-4 h-4 text-zinc-900" size={16} />
           </div>
           <span className="font-black text-base text-white tracking-tight">ForgeFlow</span>
         </div>
@@ -159,7 +162,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => navigate('/profile')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500/15 text-amber-400 border border-amber-500/20 transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-brand-500/15 text-brand-500 border border-brand-500/20 transition-all"
           >
             <User className="w-4 h-4" />
             <span>Profile</span>
@@ -177,8 +180,8 @@ export default function ProfilePage() {
         {/* User Footer */}
         <div className="p-3 border-t border-zinc-800/60">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/40 transition-colors group">
-            <Avatar className="w-8 h-8 border border-amber-500/30">
-              <AvatarFallback className="bg-amber-500/15 text-amber-400 text-xs font-bold">
+            <Avatar className="w-8 h-8 border border-brand-500/30">
+              <AvatarFallback className="bg-brand-500/15 text-brand-500 text-xs font-bold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
@@ -205,7 +208,7 @@ export default function ProfilePage() {
       />
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 w-[240px] bg-zinc-950 border-r border-zinc-800/60 z-50 flex flex-col md:hidden transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 w-[240px] z-50 flex flex-col md:hidden transition-transform duration-300 theme-sidebar-${activeTheme.sidebarStyle} border-r border-zinc-800/60 ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -218,8 +221,8 @@ export default function ProfilePage() {
           className="h-14 flex items-center justify-between px-5 border-b border-zinc-800/60 cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <Sparkles className="w-4 h-4 text-zinc-900" />
+            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+              <AppLogo className="w-4 h-4 text-zinc-900" size={16} />
             </div>
             <span className="font-black text-base text-white tracking-tight">ForgeFlow</span>
           </div>
@@ -254,7 +257,7 @@ export default function ProfilePage() {
               navigate('/profile');
               setIsMobileSidebarOpen(false);
             }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500/15 text-amber-400 border border-amber-500/20 transition-all border-0 bg-transparent cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-brand-500/15 text-brand-500 border border-brand-500/20 transition-all border-0 bg-transparent cursor-pointer text-left"
           >
             <User className="w-4 h-4" />
             <span>Profile</span>
@@ -275,8 +278,8 @@ export default function ProfilePage() {
         {/* User Footer */}
         <div className="p-3 border-t border-zinc-800/60">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-800/40 transition-colors group">
-            <Avatar className="w-8 h-8 border border-amber-500/30">
-              <AvatarFallback className="bg-amber-500/15 text-amber-400 text-xs font-bold">
+            <Avatar className="w-8 h-8 border border-brand-500/30">
+              <AvatarFallback className="bg-brand-500/15 text-brand-500 text-xs font-bold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
@@ -327,14 +330,14 @@ export default function ProfilePage() {
               <div className="lg:col-span-1 space-y-6">
                 <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl overflow-hidden">
                   <CardContent className="p-6 flex flex-col items-center text-center">
-                    <Avatar className="w-20 h-20 border-2 border-amber-500/40 mb-4 shadow-lg shadow-amber-500/10">
-                      <AvatarFallback className="bg-amber-500/10 text-amber-400 text-xl font-bold">
+                    <Avatar className="w-20 h-20 border-2 border-brand-500/40 mb-4 shadow-lg shadow-brand-500/10">
+                      <AvatarFallback className="bg-brand-500/10 text-brand-500 text-xl font-bold">
                         {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <h3 className="text-lg font-bold text-white leading-tight">{name}</h3>
                     <p className="text-xs text-zinc-500 mt-1 truncate max-w-full">{email}</p>
-                    <div className="mt-4 flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold rounded-full">
+                    <div className="mt-4 flex items-center gap-1.5 px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-brand-500 text-xs font-semibold rounded-full">
                       <Sparkles className="w-3.5 h-3.5" />
                       Creator Tier
                     </div>
@@ -346,7 +349,7 @@ export default function ProfilePage() {
                   <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl">
                     <CardHeader className="p-4 pb-2">
                       <CardTitle className="text-2xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-amber-500/70" />
+                        <Layers className="w-3.5 h-3.5 text-brand-500/70" />
                         Total Forms
                       </CardTitle>
                     </CardHeader>
@@ -358,7 +361,7 @@ export default function ProfilePage() {
                   <Card className="bg-zinc-900/40 border-zinc-800/70 shadow-none rounded-2xl">
                     <CardHeader className="p-4 pb-2">
                       <CardTitle className="text-2xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-                        <Inbox className="w-3.5 h-3.5 text-amber-500/70" />
+                        <Inbox className="w-3.5 h-3.5 text-brand-500/70" />
                         Submissions
                       </CardTitle>
                     </CardHeader>

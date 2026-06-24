@@ -6,36 +6,36 @@
 
 @layer base {
   :root {
-    /* shadcn CSS variable overrides – yellow-on-dark theme */
-    --background: 240 10% 4%;
-    --foreground: 40 30% 96%;
+    /* Dynamic theme overrides mapped to dynamic variables */
+    --background: var(--theme-background, 240 10% 4%);
+    --foreground: var(--theme-foreground, 40 30% 96%);
 
-    --card: 240 8% 8%;
-    --card-foreground: 40 30% 96%;
+    --card: var(--theme-card, 240 8% 8%);
+    --card-foreground: var(--theme-card-foreground, 40 30% 96%);
 
-    --popover: 240 8% 8%;
-    --popover-foreground: 40 30% 96%;
+    --popover: var(--theme-card, 240 8% 8%);
+    --popover-foreground: var(--theme-card-foreground, 40 30% 96%);
 
-    --primary: 38 92% 50%;
-    --primary-foreground: 240 10% 4%;
+    --primary: var(--theme-primary, 38 92% 50%);
+    --primary-foreground: var(--theme-primary-foreground, 240 10% 4%);
 
-    --secondary: 240 5% 15%;
-    --secondary-foreground: 40 20% 85%;
+    --secondary: var(--theme-secondary, 240 5% 15%);
+    --secondary-foreground: var(--theme-secondary-foreground, 40 20% 85%);
 
-    --muted: 240 5% 13%;
-    --muted-foreground: 240 5% 55%;
+    --muted: var(--theme-muted, 240 5% 13%);
+    --muted-foreground: var(--theme-muted-foreground, 240 5% 55%);
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 240 10% 4%;
+    --accent: var(--theme-primary, 38 92% 50%);
+    --accent-foreground: var(--theme-primary-foreground, 240 10% 4%);
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 40 30% 96%;
 
-    --border: 240 5% 18%;
-    --input: 240 5% 15%;
-    --ring: 38 92% 50%;
+    --border: var(--theme-border, 240 5% 18%);
+    --input: var(--theme-border, 240 5% 15%);
+    --ring: var(--theme-primary, 38 92% 50%);
 
-    --radius: 0.625rem;
+    --radius: var(--theme-radius, 0.625rem);
   }
 }
 
@@ -55,7 +55,8 @@
   }
 
   body {
-    @apply bg-[#09090b] text-[#f5f0e8] font-sans antialiased;
+    font-family: var(--theme-font, 'Geist', 'Plus Jakarta Sans', 'Inter', sans-serif);
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv11", "ss01";
   }
 
@@ -130,4 +131,74 @@
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+}
+
+/* Force hardcoded background styles to respond to dynamic theme */
+.bg-\[\#09090b\], .bg-zinc-950\/20, .bg-zinc-950 {
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Sidebar Appearance Themes */
+.theme-sidebar-solid {
+  background-color: hsl(var(--card)) !important;
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+.theme-sidebar-transparent {
+  background-color: transparent !important;
+  border-right: 1px solid transparent !important;
+}
+.theme-sidebar-glass {
+  background-color: rgba(9, 9, 11, 0.4) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+.theme-sidebar-bordered {
+  background-color: hsl(var(--background)) !important;
+  border-right: 2px solid hsl(var(--primary)) !important;
+}
+
+/* Card Appearance Themes */
+.theme-card-solid {
+  background-color: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+.theme-card-glass {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+}
+.theme-card-high-contrast {
+  background-color: #000000 !important;
+  border: 2px solid hsl(var(--border)) !important;
+  box-shadow: none !important;
+}
+.theme-card-bordered-flat {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: none !important;
+}
+
+/* Button Appearance Themes */
+.theme-btn-flat {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+}
+.theme-btn-gradient {
+  background-image: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary, var(--primary))) 100%) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+}
+.theme-btn-glass {
+  background-color: rgba(var(--primary), 0.1) !important;
+  border: 1px solid rgba(var(--primary), 0.25) !important;
+  color: hsl(var(--primary)) !important;
+}
+.theme-btn-outline {
+  background-color: transparent !important;
+  border: 2px solid hsl(var(--primary)) !important;
+  color: hsl(var(--primary)) !important;
 }

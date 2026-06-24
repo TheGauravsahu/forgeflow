@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { AppLogo } from '@/components/ui/AppLogo';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -79,8 +80,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-zinc-800/40 bg-zinc-950/70 backdrop-blur-xl transition-all">
         <div className="max-w-7xl mx-auto h-16 px-6 flex items-center justify-between">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <Icons.Sparkles className="w-4 h-4 text-zinc-900" />
+            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+              <AppLogo className="w-4 h-4 text-zinc-900" size={16} />
             </div>
             <span className="font-black text-lg text-white tracking-tight">ForgeFlow</span>
           </div>
@@ -125,8 +126,8 @@ export default function LandingPage() {
       <section className="relative z-10 pt-20 pb-16 px-6 max-w-7xl mx-auto text-center">
         <div className="space-y-6 max-w-3xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold rounded-full">
-            <Icons.Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-brand-500 text-xs font-semibold rounded-full">
+            <AppLogo className="w-3.5 h-3.5" size={14} />
             Introducing ForgeFlow 1.0
           </div>
 
@@ -324,8 +325,8 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-800/30 bg-zinc-950/60 relative z-10 py-12 px-6 text-center text-zinc-500 text-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-amber-500 flex items-center justify-center">
-              <Icons.Sparkles className="w-3.5 h-3.5 text-zinc-900" />
+            <div className="w-6 h-6 rounded bg-brand-500 flex items-center justify-center">
+              <AppLogo className="w-3.5 h-3.5 text-zinc-900" size={14} />
             </div>
             <span className="font-black text-sm text-white tracking-tight">ForgeFlow</span>
           </div>

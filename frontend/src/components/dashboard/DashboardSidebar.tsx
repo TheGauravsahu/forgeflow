@@ -10,7 +10,6 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
-  Sparkles,
   LayoutGrid,
   Archive,
   FolderPlus,
@@ -22,6 +21,8 @@ import {
   LogOut,
   Menu,
 } from 'lucide-react';
+import { AppLogo } from '@/components/ui/AppLogo';
+import { useThemeStore } from '@/store/useThemeStore';
 
 interface DashboardSidebarProps {
   selectedFolderId: string | null;
@@ -57,6 +58,8 @@ export function DashboardSidebar({
   setIsMobileSidebarOpen,
 }: DashboardSidebarProps) {
   
+  const activeTheme = useThemeStore((state) => state.activeTheme);
+  
   // Reusable Sidebar content
   const renderSidebarContent = (isMobile: boolean = false) => {
     const handleFolderClick = (id: string) => {
@@ -82,8 +85,8 @@ export function DashboardSidebar({
         {/* Logo */}
         <div className="h-14 flex items-center justify-between px-5 border-b border-zinc-800/60">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <Sparkles className="w-4 h-4 text-zinc-900" />
+            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+              <AppLogo className="w-4 h-4 text-zinc-900" size={16} />
             </div>
             <span className="font-black text-base text-white tracking-tight">ForgeFlow</span>
           </div>
@@ -255,10 +258,12 @@ export function DashboardSidebar({
     );
   };
 
+
+
   return (
     <>
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-[240px] flex-shrink-0 flex flex-col border-r border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
+      <aside className={`hidden md:flex w-[240px] flex-shrink-0 flex flex-col theme-sidebar-${activeTheme.sidebarStyle} border-r border-zinc-800/60`}>
         {renderSidebarContent(false)}
       </aside>
 
@@ -272,7 +277,7 @@ export function DashboardSidebar({
       />
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 w-[240px] bg-zinc-950 border-r border-zinc-800/60 z-50 flex flex-col md:hidden transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 w-[240px] z-50 flex flex-col md:hidden transition-transform duration-300 theme-sidebar-${activeTheme.sidebarStyle} border-r border-zinc-800/60 ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
