@@ -11,20 +11,12 @@ import { Separator } from '@/components/ui/separator';
 export default function LandingPage() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('forgeflow_token');
-    const user = localStorage.getItem('forgeflow_user');
     if (token) {
       setIsLoggedIn(true);
-      if (user) {
-        try {
-          const u = JSON.parse(user);
-          setUserName(u.name || 'Developer');
-        } catch (_) {}
-      }
     }
   }, []);
 
@@ -97,9 +89,6 @@ export default function LandingPage() {
             </button>
             <button onClick={() => scrollToSection('templates')} className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none">
               Templates
-            </button>
-            <button onClick={() => scrollToSection('pricing')} className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none">
-              Pricing
             </button>
           </nav>
 
@@ -327,82 +316,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── PRICING ── */}
-      <section id="pricing" className="relative z-10 py-24 px-6 max-w-7xl mx-auto space-y-16">
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <h2 className="text-3xl font-black text-white tracking-tight font-sans">Transparent Pricing</h2>
-          <p className="text-sm text-zinc-500">Pick a workspace level that scales with your workload.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Card 1 */}
-          <Card className="bg-zinc-900/40 border-zinc-800/80 rounded-2xl overflow-hidden p-6 flex flex-col justify-between shadow-none">
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Developer</h4>
-              <div className="flex items-baseline text-white">
-                <span className="text-3xl font-black font-sans">$0</span>
-                <span className="text-zinc-600 text-xs ml-1">/ forever</span>
-              </div>
-              <p className="text-xs text-zinc-500">Perfect for side projects and learning APIs.</p>
-              <Separator className="bg-zinc-800/60" />
-              <ul className="space-y-2 text-xs text-zinc-300">
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> 10 Active Forms</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> 1,000 Submissions/mo</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> Standard API & Webhooks</li>
-              </ul>
-            </div>
-            <Button onClick={() => navigate('/auth')} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs py-2 rounded-xl mt-6 cursor-pointer">
-              Get Started
-            </Button>
-          </Card>
-
-          {/* Card 2 */}
-          <Card className="bg-zinc-900/80 border-amber-500/40 rounded-2xl overflow-hidden p-6 flex flex-col justify-between shadow-xl shadow-amber-500/5 relative">
-            <div className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-bold uppercase tracking-wider rounded-md">
-              Popular
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest">Team Suite</h4>
-              <div className="flex items-baseline text-white">
-                <span className="text-3xl font-black font-sans">$29</span>
-                <span className="text-zinc-500 text-xs ml-1">/ month</span>
-              </div>
-              <p className="text-xs text-zinc-500">For agencies and startups requiring scale.</p>
-              <Separator className="bg-zinc-800/60" />
-              <ul className="space-y-2 text-xs text-zinc-300">
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> Unlimited Forms</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> 50,000 Submissions/mo</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> White-label Theme Customizer</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> 10GB Upload Storage</li>
-              </ul>
-            </div>
-            <Button onClick={() => navigate('/auth')} className="w-full bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold text-xs py-2 rounded-xl mt-6 cursor-pointer">
-              Upgrade Now
-            </Button>
-          </Card>
-
-          {/* Card 3 */}
-          <Card className="bg-zinc-900/40 border-zinc-800/80 rounded-2xl overflow-hidden p-6 flex flex-col justify-between shadow-none">
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Enterprise</h4>
-              <div className="flex items-baseline text-white">
-                <span className="text-3xl font-black font-sans">Custom</span>
-                <span className="text-zinc-600 text-xs ml-1">/ volume</span>
-              </div>
-              <p className="text-xs text-zinc-500">Custom agreements, SLA, and self-hosting options.</p>
-              <Separator className="bg-zinc-800/60" />
-              <ul className="space-y-2 text-xs text-zinc-300">
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> Custom volume submissions</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> SSO & SAML Integrations</li>
-                <li className="flex items-center gap-2"><Icons.Check className="w-3.5 h-3.5 text-amber-500" /> Dedicated database cluster</li>
-              </ul>
-            </div>
-            <Button onClick={() => navigate('/auth')} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs py-2 rounded-xl mt-6 cursor-pointer">
-              Contact Sales
-            </Button>
-          </Card>
-        </div>
-      </section>
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-zinc-800/30 bg-zinc-950/60 relative z-10 py-12 px-6 text-center text-zinc-500 text-xs">

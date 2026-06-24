@@ -164,28 +164,36 @@ export const formRouter = router({
       settings: z.any(),
       published: z.boolean()
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const form = await db.form.findFirst({
-        where: {
-          id: input.id,
-          published: true,
-          isArchived: false
-        },
+        where: { id: input.id },
         select: {
           id: true,
           title: true,
           description: true,
           schema: true,
           settings: true,
-          published: true
+          published: true,
+          isArchived: true,
+          userId: true
         }
       });
 
-      if (!form) {
+      if (!form || form.isArchived) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Form not found or is not published.'
+          message: 'Form not found or is archived.'
         });
+      }
+
+      if (!form.published) {
+        const isOwner = ctx.user && ctx.user.userId === form.userId;
+        if (!isOwner) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Form not published.'
+          });
+        }
       }
 
       return form;

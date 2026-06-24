@@ -25,7 +25,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -65,6 +64,8 @@ export default function DashboardPage() {
   const [newFolderName, setNewFolderName] = useState('');
 
   const [copiedFormId, setCopiedFormId] = useState<string | null>(null);
+  const [formToDeleteId, setFormToDeleteId] = useState<string | null>(null);
+  const [folderToDeleteId, setFolderToDeleteId] = useState<string | null>(null);
 
   // Authenticate Client-side
   useEffect(() => {
@@ -82,23 +83,6 @@ export default function DashboardPage() {
       }
     }
   }, [navigate]);
-
-  // Instantiate pending template if chosen from landing page
-  useEffect(() => {
-    const pendingTemplate = sessionStorage.getItem('forgeflow_pending_template');
-    if (pendingTemplate && token) {
-      sessionStorage.removeItem('forgeflow_pending_template');
-      const template = FORM_TEMPLATES.find((t) => t.id === pendingTemplate);
-      if (template) {
-        createFormMutation.mutate({
-          title: template.title,
-          description: template.description,
-          schema: template.fields,
-          settings: template.settings
-        });
-      }
-    }
-  }, [token, createFormMutation]);
 
   // Queries & Mutations
   const utils = trpc.useContext();
@@ -123,6 +107,23 @@ export default function DashboardPage() {
     }
   });
 
+  // Instantiate pending template if chosen from landing page (declared after mutation to avoid ReferenceError)
+  useEffect(() => {
+    const pendingTemplate = sessionStorage.getItem('forgeflow_pending_template');
+    if (pendingTemplate && token) {
+      sessionStorage.removeItem('forgeflow_pending_template');
+      const template = FORM_TEMPLATES.find((t) => t.id === pendingTemplate);
+      if (template) {
+        createFormMutation.mutate({
+          title: template.title,
+          description: template.description,
+          schema: template.fields,
+          settings: template.settings
+        });
+      }
+    }
+  }, [token, createFormMutation]);
+
   const createFolderMutation = trpc.form.createFolder.useMutation({
     onSuccess: () => {
       utils.form.getFolders.invalidate();
@@ -136,6 +137,7 @@ export default function DashboardPage() {
       utils.form.getFolders.invalidate();
       utils.form.list.invalidate();
       setSelectedFolderId(null);
+      setFolderToDeleteId(null);
     }
   });
 
@@ -154,6 +156,7 @@ export default function DashboardPage() {
   const deleteFormMutation = trpc.form.delete.useMutation({
     onSuccess: () => {
       utils.form.list.invalidate();
+      setFormToDeleteId(null);
     }
   });
 
@@ -288,14 +291,16 @@ export default function DashboardPage() {
           <div className="space-y-1">
             <div className="flex items-center justify-between px-1 mb-2">
               <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Folders</span>
-              <button
+              <Button
                 id="btn-create-folder"
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => setIsCreateFolderOpen(true)}
-                className="p-1 rounded-md text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
+                className="text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 transition-colors cursor-pointer"
                 title="New Folder"
               >
                 <FolderPlus className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
 
             {foldersQuery.isLoading ? (
@@ -319,14 +324,20 @@ export default function DashboardPage() {
                       setSelectedFolderId(folder.id);
                       setShowArchived(false);
                     }}
-                    className="flex-1 flex items-center gap-2 text-left min-w-0"
+                    className="flex-1 flex items-center gap-2 text-left min-w-0 cursor-pointer"
                   >
                     <FolderOpen className={`w-4 h-4 flex-shrink-0 ${selectedFolderId === folder.id && !showArchived ? 'text-amber-400' : 'text-zinc-500'}`} />
                     <span className="truncate">{folder.name}</span>
+                    <span className="ml-auto text-[10px] font-bold text-zinc-500 px-1.5 py-0.5 rounded bg-zinc-900 group-hover:bg-zinc-800 transition-colors">
+                      {folder._count.forms}
+                    </span>
                   </button>
                   <button
-                    onClick={() => deleteFolderMutation.mutate({ id: folder.id })}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-red-400 rounded transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFolderToDeleteId(folder.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 ml-1 text-zinc-600 hover:text-red-400 rounded transition-all cursor-pointer"
                     title="Delete Folder"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -338,14 +349,15 @@ export default function DashboardPage() {
 
           {/* Create Folder CTA */}
           <div className="mt-6">
-            <button
+            <Button
               id="btn-sidebar-new-folder"
+              variant="outline"
               onClick={() => setIsCreateFolderOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 border border-dashed border-zinc-800 hover:border-amber-500/40 hover:text-amber-400 hover:bg-amber-500/5 transition-all"
+              className="w-full flex items-center justify-start gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 border border-dashed border-zinc-800 hover:border-amber-500/40 hover:text-amber-400 hover:bg-amber-500/5 transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               New Folder
-            </button>
+            </Button>
           </div>
         </ScrollArea>
 
@@ -421,14 +433,14 @@ export default function DashboardPage() {
             </div>
 
             {/* New Form */}
-            <button
+            <Button
               id="btn-create-form"
               onClick={() => setIsCreateFormOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-900 text-sm font-bold rounded-lg shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all"
+              className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               New Form
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -498,7 +510,7 @@ export default function DashboardPage() {
               {formsQuery.data?.map((form) => (
                 <Card
                   key={form.id}
-                  className="group bg-zinc-900/60 border-zinc-800/70 hover:border-amber-500/25 hover:bg-zinc-900/90 rounded-2xl shadow-none hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-200 overflow-hidden"
+                  className="group relative bg-zinc-900/60 border-zinc-800/70 hover:border-amber-500/25 hover:bg-zinc-900/90 rounded-2xl shadow-none hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-200 overflow-hidden"
                 >
                   {/* Subtle amber top accent on hover */}
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/0 group-hover:via-amber-500/40 to-transparent transition-all duration-300" />
@@ -543,77 +555,85 @@ export default function DashboardPage() {
 
                     {/* Primary Actions */}
                     <div className="grid grid-cols-2 gap-2 mb-2">
-                      <button
+                      <Button
                         id={`btn-edit-${form.id}`}
+                        variant="secondary"
+                        size="sm"
                         onClick={() => navigate(`/builder/${form.id}`)}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-zinc-800/80 hover:bg-amber-500/15 hover:text-amber-300 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/60 hover:border-amber-500/30 transition-all"
+                        className="w-full bg-zinc-800/80 hover:bg-amber-500/15 hover:text-amber-300 border-zinc-700/60 hover:border-amber-500/30 transition-all cursor-pointer font-semibold text-xs"
                       >
                         <Edit className="w-3.5 h-3.5" />
                         Builder
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         id={`btn-insights-${form.id}`}
+                        variant="secondary"
+                        size="sm"
                         onClick={() => navigate(`/insights/${form.id}`)}
-                        className="flex items-center justify-center gap-1.5 py-2 bg-zinc-800/80 hover:bg-amber-500/15 hover:text-amber-300 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/60 hover:border-amber-500/30 transition-all"
+                        className="w-full bg-zinc-800/80 hover:bg-amber-500/15 hover:text-amber-300 border-zinc-700/60 hover:border-amber-500/30 transition-all cursor-pointer font-semibold text-xs"
                       >
                         <BarChart2 className="w-3.5 h-3.5" />
                         Analytics
-                      </button>
+                      </Button>
                     </div>
 
                     {/* Secondary Actions */}
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
                         id={`btn-share-${form.id}`}
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleCopyLink(form.id)}
                         disabled={!form.published}
                         title={!form.published ? 'Publish form to share link' : 'Copy public link'}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-zinc-800/60 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-400 hover:text-zinc-200 text-xs font-medium rounded-lg border border-zinc-700/50 hover:border-zinc-600 transition-all"
+                        className="flex-1 justify-center bg-zinc-900/40 border-zinc-800 hover:bg-zinc-800 hover:text-white transition-all cursor-pointer text-xs"
                       >
                         {copiedFormId === form.id ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-400" />
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
                             <span className="text-emerald-400">Copied!</span>
                           </>
                         ) : (
                           <>
-                            <Share2 className="w-3 h-3" />
+                            <Share2 className="w-3.5 h-3.5" />
                             Share
                           </>
                         )}
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         id={`btn-duplicate-${form.id}`}
+                        variant="outline"
+                        size="icon-sm"
                         onClick={() => duplicateFormMutation.mutate({ id: form.id })}
-                        className="p-1.5 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 border border-zinc-700/50 hover:border-zinc-600 rounded-lg transition-all"
+                        className="bg-zinc-900/40 border-zinc-800 hover:bg-zinc-800 hover:text-white transition-all cursor-pointer"
                         title="Duplicate"
                       >
                         <Copy className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         id={`btn-archive-${form.id}`}
+                        variant="outline"
+                        size="icon-sm"
                         onClick={() => archiveFormMutation.mutate({ id: form.id, isArchived: !form.isArchived })}
-                        className="p-1.5 bg-zinc-800/60 hover:bg-amber-500/15 text-zinc-500 hover:text-amber-400 border border-zinc-700/50 hover:border-amber-500/30 rounded-lg transition-all"
+                        className="bg-zinc-900/40 border-zinc-800 hover:bg-amber-500/15 hover:text-amber-400 hover:border-amber-500/30 transition-all cursor-pointer"
                         title={form.isArchived ? 'Restore' : 'Archive'}
                       >
                         <Archive className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         id={`btn-delete-${form.id}`}
-                        onClick={() => {
-                          if (confirm('Permanently delete this form?')) {
-                            deleteFormMutation.mutate({ id: form.id });
-                          }
-                        }}
-                        className="p-1.5 bg-zinc-800/60 hover:bg-red-500/15 text-zinc-500 hover:text-red-400 border border-zinc-700/50 hover:border-red-500/30 rounded-lg transition-all"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => setFormToDeleteId(form.id)}
+                        className="bg-zinc-900/40 border-zinc-800 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -772,6 +792,88 @@ export default function DashboardPage() {
               </button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── DELETE FORM CONFIRMATION DIALOG ──────────────────────────────── */}
+      <Dialog open={!!formToDeleteId} onOpenChange={(open) => !open && setFormToDeleteId(null)}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-sm shadow-2xl shadow-black/60 rounded-2xl">
+          <DialogHeader className="pb-2">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/25 flex items-center justify-center">
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </div>
+              <DialogTitle className="text-base font-bold text-white">Delete Form</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Are you sure you want to permanently delete this form? This action cannot be undone and will delete all gathered submissions.
+            </p>
+          </div>
+          <DialogFooter className="pt-2 gap-2 flex-row justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setFormToDeleteId(null)}
+              className="px-4 py-2 hover:bg-zinc-800 text-zinc-300 text-sm font-semibold rounded-xl transition-all"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={deleteFormMutation.isLoading}
+              onClick={() => {
+                if (formToDeleteId) {
+                  deleteFormMutation.mutate({ id: formToDeleteId });
+                }
+              }}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all border-0"
+            >
+              {deleteFormMutation.isLoading ? 'Deleting…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── DELETE FOLDER CONFIRMATION DIALOG ────────────────────────────── */}
+      <Dialog open={!!folderToDeleteId} onOpenChange={(open) => !open && setFolderToDeleteId(null)}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-sm shadow-2xl shadow-black/60 rounded-2xl">
+          <DialogHeader className="pb-2">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/25 flex items-center justify-center">
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </div>
+              <DialogTitle className="text-base font-bold text-white">Delete Folder</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Are you sure you want to permanently delete this folder? Forms inside this folder will remain but will be moved to the root list.
+            </p>
+          </div>
+          <DialogFooter className="pt-2 gap-2 flex-row justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setFolderToDeleteId(null)}
+              className="px-4 py-2 hover:bg-zinc-800 text-zinc-300 text-sm font-semibold rounded-xl transition-all"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={deleteFolderMutation.isLoading}
+              onClick={() => {
+                if (folderToDeleteId) {
+                  deleteFolderMutation.mutate({ id: folderToDeleteId });
+                }
+              }}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all border-0"
+            >
+              {deleteFolderMutation.isLoading ? 'Deleting…' : 'Delete'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

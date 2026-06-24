@@ -33,7 +33,8 @@ export interface FormFieldOption {
 
 export interface VisibilityRule {
   fieldId: string;
-  condition: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'isEmpty' | 'isNotEmpty';
+  condition?: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'isEmpty' | 'isNotEmpty';
+  operator?: string; // fallback/alternative name used in builder
   value: string;
 }
 
@@ -51,6 +52,13 @@ export interface FormFieldProperties {
   allowedFileTypes?: string[];
   maxSizeMB?: number;
   visibilityRules?: VisibilityRule[];
+  description?: string;
+  helpText?: string;
+  regexPattern?: string;
+  customErrorMessage?: string;
+  step?: number;
+  minLabel?: string;
+  maxLabel?: string;
 }
 
 export interface FormField {
@@ -59,12 +67,20 @@ export interface FormField {
   properties: FormFieldProperties;
 }
 
+export interface FormTheme {
+  primaryColor?: string;
+  backgroundColor?: string;
+  borderRadius?: string;
+  fontFamily?: string;
+}
+
 export interface FormSettings {
   submitButtonText?: string;
   successMessage?: string;
   redirectUrl?: string;
   themeColor?: string;
   backgroundColor?: string;
+  theme?: FormTheme;
 }
 
 export const RegisterInputSchema = z.object({

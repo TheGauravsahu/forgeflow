@@ -8,7 +8,6 @@ import {
   Settings,
   LogOut,
   Mail,
-  Calendar,
   Layers,
   Inbox,
   Save,

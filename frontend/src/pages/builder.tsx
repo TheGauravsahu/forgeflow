@@ -139,7 +139,7 @@ export default function BuilderPage() {
 
   useEffect(() => {
     if (query.data && !isLoaded) {
-      setFields((query.data.schema as FormField[]) || []);
+      setFields(((query.data.schema as unknown) as FormField[]) || []);
       setFormTitle(query.data.title);
       setFormDesc(query.data.description || '');
       setFormPublished(query.data.published);
@@ -345,8 +345,7 @@ export default function BuilderPage() {
             variant="outline"
             size="sm"
             onClick={() => navigate(`/form/${formId}`)}
-            disabled={!formPublished}
-            className="text-xs border-surface-700 bg-surface-800 hover:bg-surface-700 text-surface-200 gap-1.5 disabled:opacity-40"
+            className="text-xs border-surface-700 bg-surface-800 hover:bg-surface-700 text-surface-200 gap-1.5 cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5" />
             Preview

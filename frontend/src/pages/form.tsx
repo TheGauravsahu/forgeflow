@@ -235,7 +235,6 @@ export default function PublicFormPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
   const [honeypot, setHoneypot] = useState('');
 
   // Fetch Form spec (public route)
@@ -244,17 +243,10 @@ export default function PublicFormPage() {
     { enabled: !!formId, retry: false }
   );
 
-  // Fetch Captcha challenge
-  const captchaQuery = trpc.submission.getCaptcha.useQuery(undefined, {
-    enabled: !!formId,
-    refetchOnWindowFocus: false,
-    retry: false
-  });
-
   const submitMutation = trpc.submission.submit.useMutation();
 
   // Create full validation schema
-  const fields = (form?.schema as FormField[]) || [];
+  const fields = ((form?.schema as unknown) as FormField[]) || [];
   const formZodSchema = buildFormZodSchema(fields);
 
   const {
@@ -299,15 +291,11 @@ export default function PublicFormPage() {
       await submitMutation.mutateAsync({
         formId,
         data: filteredData,
-        captchaToken: captchaQuery.data?.token,
-        captchaAnswer,
         honeypot
       });
       setSubmitted(true);
     } catch (err: any) {
       setSubmissionError(err.message || 'Submission failed. Please check your answers and try again.');
-      captchaQuery.refetch();
-      setCaptchaAnswer('');
     }
   };
 
@@ -987,33 +975,6 @@ export default function PublicFormPage() {
                   );
                 })}
               </div>
-
-              {/* ── CAPTCHA Spam Protection ── */}
-              {captchaQuery.data && (
-                <div className="mt-8 p-5 bg-stone-50 border border-stone-200/80 rounded-xl space-y-3">
-                  <div className="flex items-center gap-2 text-stone-700">
-                    <Lock className="w-4 h-4 text-stone-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-stone-500">Spam Protection Verification</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <span className="text-xs text-stone-400">Please answer this question to submit:</span>
-                      <p className="text-sm font-bold text-stone-800 mt-0.5">{captchaQuery.data.question}</p>
-                    </div>
-                    <div className="w-32">
-                      <input
-                        type="text"
-                        required
-                        placeholder="Answer"
-                        value={captchaAnswer}
-                        onChange={(e) => setCaptchaAnswer(e.target.value)}
-                        className={inputCls(false, 'w-full text-center')}
-                        style={inputBorderRadius}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* ── Submission error banner ── */}
               {submissionError && (

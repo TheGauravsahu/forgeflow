@@ -1,6 +1,9 @@
-import * as crypto from 'crypto';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import { buildFormZodSchema, FormField } from '../types/shared';
+import { publicProcedure, protectedProcedure, router } from '../trpc';
+import { db } from '../db';
 
-const CAPTCHA_SECRET = process.env.CAPTCHA_SECRET || 'forgeflow_captcha_secret_key_2026';
 
 // Simple in-memory rate limit cache
 const submissionRateLimitCache = new Map<string, { count: number; resetAt: number }>();
@@ -19,81 +22,8 @@ const DISPOSABLE_DOMAINS = new Set([
   'trashmail.com'
 ]);
 
-function generateCaptchaChallenge(): { question: string; token: string } {
-  const num1 = Math.floor(Math.random() * 9) + 2; // 2 to 10
-  const num2 = Math.floor(Math.random() * 9) + 2; // 2 to 10
-  const operators = ['+', '-', '*'];
-  const operator = operators[Math.floor(Math.random() * operators.length)];
-
-  let question = '';
-  let answer = 0;
-
-  switch (operator) {
-    case '+':
-      question = `What is ${num1} plus ${num2}?`;
-      answer = num1 + num2;
-      break;
-    case '-':
-      const max = Math.max(num1, num2);
-      const min = Math.min(num1, num2);
-      question = `What is ${max} minus ${min}?`;
-      answer = max - min;
-      break;
-    case '*':
-      question = `What is ${num1} multiplied by ${num2}?`;
-      answer = num1 * num2;
-      break;
-  }
-
-  const expiry = Date.now() + 5 * 60 * 1000; // 5 mins
-  const signatureData = `${question}:${answer}:${expiry}`;
-  const hmac = crypto.createHmac('sha256', CAPTCHA_SECRET).update(signatureData).digest('hex');
-  const token = `${expiry}:${hmac}:${question}`;
-
-  return { question, token };
-}
-
-function verifyCaptchaChallenge(token: string, response: string): boolean {
-  try {
-    const parts = token.split(':');
-    if (parts.length < 3) return false;
-    const expiry = parseInt(parts[0]);
-    const receivedHmac = parts[1];
-    const question = parts.slice(2).join(':');
-
-    if (Date.now() > expiry) return false; // Expired
-
-    const expectedAnswer = parseInt(response.trim());
-    if (isNaN(expectedAnswer)) return false;
-
-    const signatureData = `${question}:${expectedAnswer}:${expiry}`;
-    const calculatedHmac = crypto.createHmac('sha256', CAPTCHA_SECRET).update(signatureData).digest('hex');
-
-    return crypto.timingSafeEqual(Buffer.from(calculatedHmac), Buffer.from(receivedHmac));
-  } catch (err) {
-    return false;
-  }
-}
 
 export const submissionRouter = router({
-  getCaptcha: publicProcedure
-    .meta({
-      openapi: {
-        method: 'GET',
-        path: '/forms/captcha',
-        tags: ['submission'],
-        summary: 'Generate a CAPTCHA challenge'
-      }
-    })
-    .input(z.void())
-    .output(z.object({
-      question: z.string(),
-      token: z.string()
-    }))
-    .query(() => {
-      return generateCaptchaChallenge();
-    }),
-
   submit: publicProcedure
     .meta({
       openapi: {
@@ -106,8 +36,6 @@ export const submissionRouter = router({
     .input(z.object({
       formId: z.string(),
       data: z.any(),
-      captchaToken: z.string().optional(),
-      captchaAnswer: z.string().optional(),
       honeypot: z.string().optional()
     }))
     .output(z.object({
@@ -161,19 +89,6 @@ export const submissionRouter = router({
         });
       }
 
-      // 4. CAPTCHA Verification
-      if (!input.captchaToken || !input.captchaAnswer) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Verification challenge is required.'
-        });
-      }
-      if (!verifyCaptchaChallenge(input.captchaToken, input.captchaAnswer)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Incorrect verification challenge answer.'
-        });
-      }
 
       // 5. Disposable Email Domain Validation
       const formFields = (form.schema as any) as FormField[];

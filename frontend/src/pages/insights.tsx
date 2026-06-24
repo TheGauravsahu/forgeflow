@@ -40,6 +40,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -100,6 +107,7 @@ export default function InsightsPage() {
   // Pagination & Search States
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  const [inspectSubmission, setInspectSubmission] = useState<any | null>(null);
 
   // Queries
   const formQuery = trpc.form.get.useQuery({ id: formId }, { enabled: !!formId });
@@ -123,7 +131,7 @@ export default function InsightsPage() {
     'http://localhost:3001';
   const exportUrl = `${apiBase}/api/forms/${formId}/export-csv?token=${localStorage.getItem('forgeflow_token')}`;
 
-  const fields = (form?.schema as FormField[]) || [];
+  const fields = ((form?.schema as unknown) as FormField[]) || [];
   const activeFields = fields.filter(
     (f) => !['heading', 'divider', 'markdown', 'richtext', 'hidden'].includes(f.type),
   );
@@ -148,44 +156,29 @@ export default function InsightsPage() {
 
   /* ──────────────── JSX ──────────────── */
   return (
-    <div
-      className="min-h-screen flex flex-col text-slate-100"
-      style={{ backgroundColor: '#09090b' }}
-    >
+    <div className="min-h-screen flex flex-col text-zinc-100 bg-[#09090b] font-sans selection:bg-amber-500/20 selection:text-amber-200">
       {/* ── Header ── */}
-      <header
-        className="sticky top-0 z-50 border-b px-6 py-4 flex items-center justify-between backdrop-blur-xl"
-        style={{
-          backgroundColor: 'rgba(9,9,11,0.85)',
-          borderColor: '#1f1f28',
-        }}
-      >
+      <header className="sticky top-0 z-50 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
-            className="rounded-xl text-slate-400 hover:text-amber-400 hover:bg-amber-400/10 transition-all duration-200"
+            className="rounded-xl text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 transition-all duration-200 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
           <div>
             <div className="flex items-center gap-2">
-              <h1
-                className="text-xl font-extrabold tracking-tight"
-                style={{ color: '#f8f8f8' }}
-              >
+              <h1 className="text-xl font-extrabold tracking-tight text-white">
                 Form Insights
               </h1>
-              <Badge
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full border-0"
-                style={{ backgroundColor: '#f59e0b22', color: '#f59e0b' }}
-              >
+              <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/25 transition-all">
                 Analytics
               </Badge>
             </div>
-            <p className="text-xs text-slate-500 truncate max-w-[220px] sm:max-w-md mt-0.5">
+            <p className="text-xs text-zinc-500 truncate max-w-[220px] sm:max-w-md mt-0.5">
               {form?.title ?? 'Loading…'}
             </p>
           </div>
@@ -196,14 +189,7 @@ export default function InsightsPage() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Button
-            className="flex items-center gap-2 font-bold text-sm rounded-xl shadow-lg transition-all duration-200 border-0"
-            style={{
-              background: 'linear-gradient(135deg,#f59e0b,#d97706)',
-              color: '#09090b',
-              boxShadow: '0 4px 20px #f59e0b33',
-            }}
-          >
+          <Button className="flex items-center gap-2 font-bold text-sm rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 transition-all border-0 cursor-pointer">
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
@@ -224,84 +210,57 @@ export default function InsightsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Total Submissions */}
-            <Card
-              className="rounded-2xl border shadow-2xl overflow-hidden relative group"
-              style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at top left,#f59e0b0d,transparent 60%)' }}
-              />
+            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:bg-zinc-900/65 shadow-none hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-300 overflow-hidden relative group">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(245,158,11,0.05),transparent_60%)]" />
               <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                     Total Submissions
                   </p>
-                  <h3 className="text-4xl font-black mt-1.5" style={{ color: '#f8f8f8' }}>
+                  <h3 className="text-4xl font-black mt-1.5 text-white">
                     {totalSubmissions}
                   </h3>
-                  <p className="text-[11px] text-slate-600 mt-1">responses collected</p>
+                  <p className="text-[11px] text-zinc-600 mt-1">responses collected</p>
                 </div>
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-amber-500/10 text-amber-500">
                   <FileText className="w-7 h-7" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Avg per Day */}
-            <Card
-              className="rounded-2xl border shadow-2xl overflow-hidden relative group"
-              style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at top left,#f59e0b0d,transparent 60%)' }}
-              />
+            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:bg-zinc-900/65 shadow-none hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-300 overflow-hidden relative group">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(245,158,11,0.05),transparent_60%)]" />
               <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                     Avg per Day
                   </p>
-                  <h3 className="text-4xl font-black mt-1.5" style={{ color: '#f8f8f8' }}>
+                  <h3 className="text-4xl font-black mt-1.5 text-white">
                     {avgPerDay}
                   </h3>
-                  <p className="text-[11px] text-slate-600 mt-1">daily average</p>
+                  <p className="text-[11px] text-zinc-600 mt-1">daily average</p>
                 </div>
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-amber-500/10 text-amber-500">
                   <TrendingUp className="w-7 h-7" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Completion Rate */}
-            <Card
-              className="rounded-2xl border shadow-2xl overflow-hidden relative group"
-              style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at top left,#f59e0b0d,transparent 60%)' }}
-              />
+            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:bg-zinc-900/65 shadow-none hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-300 overflow-hidden relative group">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_top_left,rgba(245,158,11,0.05),transparent_60%)]" />
               <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                     Completion Rate
                   </p>
-                  <h3 className="text-4xl font-black mt-1.5" style={{ color: '#f8f8f8' }}>
+                  <h3 className="text-4xl font-black mt-1.5 text-white">
                     {completionRate}
                   </h3>
-                  <p className="text-[11px] text-slate-600 mt-1">of submissions complete</p>
+                  <p className="text-[11px] text-zinc-600 mt-1">of submissions complete</p>
                 </div>
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-amber-500/10 text-amber-500">
                   <Zap className="w-7 h-7" />
                 </div>
               </CardContent>
@@ -311,10 +270,7 @@ export default function InsightsPage() {
 
         {/* ── Tabs: Timeline + Breakdown + Submissions ── */}
         <Tabs defaultValue="timeline" className="w-full">
-          <TabsList
-            className="rounded-xl p-1 gap-1 border"
-            style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-          >
+          <TabsList className="rounded-xl p-1 gap-1 border border-zinc-800/60 bg-zinc-950/80">
             {[
               { value: 'timeline', label: 'Timeline', icon: <Calendar className="w-3.5 h-3.5" /> },
               { value: 'breakdown', label: 'Field Breakdown', icon: <BarChart2 className="w-3.5 h-3.5" /> },
@@ -323,14 +279,9 @@ export default function InsightsPage() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="flex items-center gap-1.5 text-xs font-bold rounded-lg px-4 py-2 transition-all duration-200 data-[state=active]:text-[#09090b]"
-                style={
-                  {
-                    '--tab-active-bg': '#f59e0b',
-                  } as React.CSSProperties
-                }
+                className="flex items-center gap-1.5 text-xs font-bold rounded-lg px-4 py-2 transition-all duration-200 data-[state=active]:bg-amber-500 data-[state=active]:text-zinc-950 text-zinc-400 hover:text-zinc-200 cursor-pointer"
               >
-                <span style={{ color: 'inherit' }}>{tab.icon}</span>
+                <span>{tab.icon}</span>
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -338,23 +289,17 @@ export default function InsightsPage() {
 
           {/* ── Timeline Tab ── */}
           <TabsContent value="timeline" className="mt-6">
-            <Card
-              className="rounded-2xl border shadow-2xl"
-              style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-            >
+            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none">
               <CardHeader className="pb-0">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                  >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-bold text-slate-100">
+                    <CardTitle className="text-base font-bold text-white">
                       Submission Timeline
                     </CardTitle>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-zinc-500 mt-0.5">
                       Volume of form answers submitted over time
                     </p>
                   </div>
@@ -372,7 +317,7 @@ export default function InsightsPage() {
                             <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1f1f28" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                         <XAxis
                           dataKey="date"
                           stroke="#3f3f46"
@@ -389,16 +334,16 @@ export default function InsightsPage() {
                         />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: '#18181f',
-                            borderColor: '#2a2a35',
-                            borderRadius: '10px',
-                            color: '#f8f8f8',
+                            backgroundColor: '#09090b',
+                            borderColor: '#27272a',
+                            borderRadius: '12px',
+                            color: '#f4f4f5',
                             fontSize: '12px',
-                            boxShadow: '0 8px 32px #00000088',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.85)',
                           }}
                           labelStyle={{ color: '#a1a1aa', fontWeight: 600 }}
                           itemStyle={{ color: '#f59e0b', fontWeight: 700 }}
-                          cursor={{ stroke: '#f59e0b33', strokeWidth: 1 }}
+                          cursor={{ stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1 }}
                         />
                         <Area
                           type="monotone"
@@ -413,15 +358,12 @@ export default function InsightsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-600">
-                      <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: '#1f1f28' }}
-                      >
-                        <Calendar className="w-8 h-8 text-slate-600" />
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-600">
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
+                        <Calendar className="w-8 h-8 text-zinc-500" />
                       </div>
-                      <p className="text-sm font-semibold text-slate-500">No timeline data yet</p>
-                      <p className="text-xs text-slate-600">Submissions will appear here once collected</p>
+                      <p className="text-sm font-semibold text-zinc-400">No timeline data yet</p>
+                      <p className="text-xs text-zinc-500">Submissions will appear here once collected</p>
                     </div>
                   )}
                 </div>
@@ -434,13 +376,10 @@ export default function InsightsPage() {
             {analytics?.fieldAnalytics && Object.keys(analytics.fieldAnalytics).length > 0 ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-extrabold text-slate-100 tracking-tight">
+                  <h2 className="text-lg font-extrabold text-white tracking-tight">
                     Question Breakdown
                   </h2>
-                  <Badge
-                    className="text-[10px] font-bold border-0"
-                    style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                  >
+                  <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
                     {Object.keys(analytics.fieldAnalytics).length} fields
                   </Badge>
                 </div>
@@ -450,18 +389,14 @@ export default function InsightsPage() {
                     return (
                       <Card
                         key={fieldId}
-                        className="rounded-2xl border shadow-xl flex flex-col justify-between"
-                        style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
+                        className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none flex flex-col justify-between"
                       >
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start gap-3">
                             <CardTitle className="text-sm font-bold text-slate-200 leading-snug">
                               {data.label || fieldId}
                             </CardTitle>
-                            <Badge
-                              className="text-[9px] font-black px-2 py-0.5 rounded-full border-0 flex-shrink-0"
-                              style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                            >
+                            <Badge className="text-[9px] font-black px-2 py-0.5 rounded-full border-0 bg-amber-500/10 text-amber-500">
                               {data.type}
                             </Badge>
                           </div>
@@ -470,24 +405,18 @@ export default function InsightsPage() {
                           </p>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <Separator className="mb-4" style={{ backgroundColor: '#1f1f28' }} />
+                          <Separator className="mb-4 bg-zinc-800/60" />
                           {isNumeric ? (
-                            <div
-                              className="rounded-xl p-4 flex items-center justify-between"
-                              style={{ backgroundColor: '#18181f', border: '1px solid #1f1f28' }}
-                            >
+                            <div className="rounded-xl p-4 flex items-center justify-between bg-zinc-950/40 border border-zinc-800/60">
                               <div>
-                                <p className="text-xs text-slate-500">Average Score</p>
-                                <p
-                                  className="text-4xl font-black mt-1"
-                                  style={{ color: '#f59e0b' }}
-                                >
+                                <p className="text-xs text-zinc-500 font-medium">Average Score</p>
+                                <p className="text-4xl font-black mt-1 text-amber-500">
                                   {data.average}
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="text-[10px] text-slate-600">Metric</p>
-                                <p className="text-xs font-bold text-slate-400 uppercase mt-1">
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Metric</p>
+                                <p className="text-xs font-bold text-zinc-400 uppercase mt-1">
                                   Mean
                                 </p>
                               </div>
@@ -501,24 +430,17 @@ export default function InsightsPage() {
                                   return (
                                     <div key={key} className="space-y-1">
                                       <div className="flex justify-between text-xs font-semibold">
-                                        <span className="text-slate-300 truncate max-w-[180px]">
+                                        <span className="text-zinc-300 truncate max-w-[180px]">
                                           {key}
                                         </span>
-                                        <span className="text-slate-500 flex-shrink-0 ml-2">
+                                        <span className="text-zinc-500 flex-shrink-0 ml-2">
                                           {count} ({pct}%)
                                         </span>
                                       </div>
-                                      <div
-                                        className="w-full h-2 rounded-full overflow-hidden"
-                                        style={{ backgroundColor: '#1f1f28' }}
-                                      >
+                                      <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-800">
                                         <div
-                                          className="h-full rounded-full transition-all duration-700"
-                                          style={{
-                                            width: `${pct}%`,
-                                            background:
-                                              'linear-gradient(90deg,#f59e0b,#d97706)',
-                                          }}
+                                          className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-amber-500 to-amber-600 shadow-sm"
+                                          style={{ width: `${pct}%` }}
                                         />
                                       </div>
                                     </div>
@@ -526,7 +448,7 @@ export default function InsightsPage() {
                                 },
                               )}
                               {Object.keys(data.distribution || {}).length === 0 && (
-                                <p className="text-xs text-slate-600 italic">No distribution data</p>
+                                <p className="text-xs text-zinc-500 italic">No distribution data</p>
                               )}
                             </div>
                           )}
@@ -537,20 +459,14 @@ export default function InsightsPage() {
                 </div>
               </div>
             ) : (
-              <Card
-                className="rounded-2xl border"
-                style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-              >
+              <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none">
                 <CardContent className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                  <div
-                    className="w-20 h-20 rounded-2xl flex items-center justify-center"
-                    style={{ backgroundColor: '#1f1f28' }}
-                  >
-                    <BarChart2 className="w-10 h-10 text-slate-600" />
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
+                    <BarChart2 className="w-10 h-10 text-zinc-500" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-400">No field analytics yet</p>
-                    <p className="text-xs text-slate-600 mt-1">
+                    <p className="font-bold text-zinc-300">No field analytics yet</p>
+                    <p className="text-xs text-zinc-500 mt-1">
                       Analytics will populate once responses are submitted
                     </p>
                   </div>
@@ -561,60 +477,48 @@ export default function InsightsPage() {
 
           {/* ── Submissions Tab ── */}
           <TabsContent value="submissions" className="mt-6">
-            <Card
-              className="rounded-2xl border shadow-xl overflow-hidden"
-              style={{ backgroundColor: '#0f0f12', borderColor: '#1f1f28' }}
-            >
+            <Card className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 shadow-none overflow-hidden">
               {/* Card Header */}
               <CardHeader className="pb-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                    >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500">
                       <Layers className="w-4 h-4" />
                     </div>
                     <div>
-                      <CardTitle className="text-base font-bold text-slate-100">
+                      <CardTitle className="text-base font-bold text-white">
                         All Submissions
                       </CardTitle>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-zinc-500 mt-0.5">
                         Individual form replies submitted by respondents
                       </p>
                     </div>
                   </div>
                   {submissionData && (
-                    <Badge
-                      className="font-bold border-0 text-xs"
-                      style={{ backgroundColor: '#f59e0b18', color: '#f59e0b' }}
-                    >
+                    <Badge className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
                       {submissionData.totalCount} entries
                     </Badge>
                   )}
                 </div>
               </CardHeader>
 
-              <Separator className="mt-4" style={{ backgroundColor: '#1f1f28' }} />
+              <Separator className="mt-4 bg-zinc-800/60" />
 
               {/* Table body */}
               <div className="overflow-x-auto">
                 {listQuery.isLoading ? (
-                  <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-500">
-                    <Loader2 className="w-8 h-8" style={{ color: '#f59e0b' } as React.CSSProperties} />
+                  <div className="py-20 flex flex-col items-center justify-center gap-3 text-zinc-500">
+                    <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
                     <span className="text-sm font-medium">Loading responses…</span>
                   </div>
                 ) : !submissionData || submissionData.submissions.length === 0 ? (
                   <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
-                    <div
-                      className="w-20 h-20 rounded-2xl flex items-center justify-center"
-                      style={{ backgroundColor: '#1f1f28' }}
-                    >
-                      <FileText className="w-10 h-10 text-slate-600" />
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-zinc-900 border border-zinc-800">
+                      <FileText className="w-10 h-10 text-zinc-500" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-400">No submissions yet</p>
-                      <p className="text-xs text-slate-600 mt-1">
+                      <p className="font-bold text-zinc-300">No submissions yet</p>
+                      <p className="text-xs text-zinc-500 mt-1">
                         Share your form link to start collecting responses
                       </p>
                     </div>
@@ -623,14 +527,7 @@ export default function InsightsPage() {
                   <ScrollArea className="w-full">
                     <table className="w-full text-left border-collapse min-w-[640px]">
                       <thead>
-                        <tr
-                          className="text-[11px] font-black uppercase tracking-widest"
-                          style={{
-                            backgroundColor: '#18181f',
-                            borderBottom: '1px solid #1f1f28',
-                            color: '#71717a',
-                          }}
-                        >
+                        <tr className="text-[11px] font-black uppercase tracking-widest bg-zinc-950/60 border-b border-zinc-800 text-zinc-500">
                           <th className="py-3.5 px-5">Submitted At</th>
                           {activeFields.slice(0, 4).map((f) => (
                             <th key={f.id} className="py-3.5 px-5 max-w-[180px] truncate">
@@ -641,26 +538,14 @@ export default function InsightsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {submissionData.submissions.map((sub, rowIdx) => {
+                        {submissionData.submissions.map((sub) => {
                           const data = sub.data as Record<string, any>;
                           return (
                             <tr
                               key={sub.id}
-                              className="text-sm transition-colors duration-150"
-                              style={{
-                                borderBottom: '1px solid #1f1f28',
-                                backgroundColor: rowIdx % 2 === 0 ? 'transparent' : '#18181f44',
-                              }}
-                              onMouseEnter={(e) =>
-                                ((e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                                  '#f59e0b08')
-                              }
-                              onMouseLeave={(e) =>
-                                ((e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                                  rowIdx % 2 === 0 ? 'transparent' : '#18181f44')
-                              }
+                              className="text-sm border-b border-zinc-800/40 hover:bg-amber-500/[0.02] transition-colors duration-150"
                             >
-                              <td className="py-4 px-5 text-slate-400 whitespace-nowrap font-medium">
+                              <td className="py-4 px-5 text-zinc-400 whitespace-nowrap font-medium">
                                 {new Date(sub.createdAt).toLocaleString()}
                               </td>
                               {activeFields.slice(0, 4).map((f) => {
@@ -683,7 +568,7 @@ export default function InsightsPage() {
                                 return (
                                   <td
                                     key={f.id}
-                                    className="py-4 px-5 text-slate-400 max-w-[180px] truncate"
+                                    className="py-4 px-5 text-zinc-400 max-w-[180px] truncate"
                                   >
                                     {typeof val === 'string' &&
                                     val.startsWith('data:image/') ? (
@@ -691,12 +576,7 @@ export default function InsightsPage() {
                                         href={val}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors duration-150"
-                                        style={{
-                                          backgroundColor: '#f59e0b18',
-                                          color: '#f59e0b',
-                                          border: '1px solid #f59e0b33',
-                                        }}
+                                        className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all duration-150"
                                       >
                                         <Eye className="w-3 h-3" />
                                         View Attachment
@@ -709,20 +589,10 @@ export default function InsightsPage() {
                               })}
                               <td className="py-4 px-5 text-right">
                                 <button
-                                  onClick={() => {
-                                    // Modal detail display (optional)
-                                    alert(JSON.stringify(data, null, 2));
-                                  }}
-                                  className="text-xs font-bold transition-colors duration-150"
-                                  style={{ color: '#f59e0b' }}
-                                  onMouseEnter={(e) =>
-                                    ((e.currentTarget as HTMLButtonElement).style.color = '#fbbf24')
-                                  }
-                                  onMouseLeave={(e) =>
-                                    ((e.currentTarget as HTMLButtonElement).style.color = '#f59e0b')
-                                  }
+                                  onClick={() => setInspectSubmission(data)}
+                                  className="text-xs font-bold transition-colors duration-150 cursor-pointer text-amber-500 hover:text-amber-400"
                                 >
-                                  Inspect JSON
+                                  Inspect
                                 </button>
                               </td>
                             </tr>
@@ -737,16 +607,13 @@ export default function InsightsPage() {
               {/* Pagination controls */}
               {totalPages > 1 && (
                 <>
-                  <Separator style={{ backgroundColor: '#1f1f28' }} />
-                  <div
-                    className="px-6 py-4 flex items-center justify-between"
-                    style={{ backgroundColor: '#18181f44' }}
-                  >
-                    <span className="text-xs text-slate-500 font-medium">
+                  <Separator className="bg-zinc-800/60" />
+                  <div className="px-6 py-4 flex items-center justify-between bg-zinc-950/20">
+                    <span className="text-xs text-zinc-500 font-medium">
                       Page{' '}
-                      <span className="text-slate-300 font-bold">{currentPage + 1}</span>{' '}
+                      <span className="text-zinc-300 font-bold">{currentPage + 1}</span>{' '}
                       of{' '}
-                      <span className="text-slate-300 font-bold">{totalPages}</span>
+                      <span className="text-zinc-300 font-bold">{totalPages}</span>
                     </span>
                     <div className="flex gap-2">
                       <Button
@@ -754,12 +621,7 @@ export default function InsightsPage() {
                         size="icon"
                         disabled={currentPage === 0}
                         onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                        className="w-8 h-8 rounded-lg border transition-all duration-150 disabled:opacity-40"
-                        style={{
-                          backgroundColor: '#18181f',
-                          borderColor: '#2a2a35',
-                          color: '#a1a1aa',
-                        }}
+                        className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </Button>
@@ -768,12 +630,7 @@ export default function InsightsPage() {
                         size="icon"
                         disabled={currentPage >= totalPages - 1}
                         onClick={() => setCurrentPage((p) => p + 1)}
-                        className="w-8 h-8 rounded-lg border transition-all duration-150 disabled:opacity-40"
-                        style={{
-                          backgroundColor: '#18181f',
-                          borderColor: '#2a2a35',
-                          color: '#a1a1aa',
-                        }}
+                        className="w-8 h-8 rounded-lg border border-zinc-800 hover:bg-zinc-800 disabled:opacity-40 transition-all duration-150 bg-zinc-900 text-zinc-400"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </Button>
@@ -785,6 +642,108 @@ export default function InsightsPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* ─── INSPECT SUBMISSION DIALOG ────────────────────────────────────── */}
+      <Dialog open={!!inspectSubmission} onOpenChange={(open) => !open && setInspectSubmission(null)}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg shadow-2xl shadow-black/60 rounded-2xl">
+          <DialogHeader className="pb-2 border-b border-zinc-800">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-amber-400" />
+              </div>
+              <DialogTitle className="text-base font-bold text-white">Submission Detail</DialogTitle>
+            </div>
+          </DialogHeader>
+
+          {inspectSubmission && (
+            <ScrollArea className="max-h-[380px] pr-2 py-4">
+              <div className="space-y-4">
+                {/* Meta details */}
+                <div className="grid grid-cols-2 gap-4 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/40 text-xs">
+                  <div>
+                    <span className="text-zinc-500 block uppercase tracking-wider font-semibold text-[10px]">Submission ID</span>
+                    <span className="text-zinc-300 font-mono select-all">{inspectSubmission.id}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block uppercase tracking-wider font-semibold text-[10px]">Submitted At</span>
+                    <span className="text-zinc-300">
+                      {new Date(inspectSubmission.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  {inspectSubmission.ip && (
+                    <div className="col-span-2">
+                      <span className="text-zinc-500 block uppercase tracking-wider font-semibold text-[10px]">IP Address</span>
+                      <span className="text-zinc-300 font-mono">{inspectSubmission.ip}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Answers list */}
+                <div className="space-y-3.5">
+                  <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Responses</h4>
+                  <div className="divide-y divide-zinc-800/40 border-t border-b border-zinc-800/60">
+                    {activeFields.map((field) => {
+                      const answer = inspectSubmission.answers?.[field.id];
+                      let displayVal = '—';
+                      if (answer !== undefined && answer !== null) {
+                        if (typeof answer === 'boolean') {
+                          displayVal = answer ? 'Yes' : 'No';
+                        } else if (Array.isArray(answer)) {
+                          displayVal = answer.join(', ');
+                        } else if (typeof answer === 'object') {
+                          displayVal = JSON.stringify(answer);
+                        } else {
+                          displayVal = String(answer);
+                        }
+                      }
+
+                      return (
+                        <div key={field.id} className="py-3 flex flex-col gap-1">
+                          <span className="text-xs font-bold text-zinc-400">
+                            {field.properties.label || field.id}
+                          </span>
+                          <div className="text-sm text-zinc-200 break-words font-medium">
+                            {typeof answer === 'string' && answer.startsWith('data:image/') ? (
+                              <div className="mt-1">
+                                <img
+                                  src={answer}
+                                  alt="attachment"
+                                  className="max-h-32 rounded-lg border border-zinc-800 bg-zinc-950 p-1"
+                                />
+                                <a
+                                  href={answer}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block text-xs font-bold text-amber-500 hover:text-amber-400 mt-1.5"
+                                >
+                                  View Full Attachment
+                                </a>
+                              </div>
+                            ) : (
+                              displayVal
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+
+          <DialogFooter className="pt-2 border-t border-zinc-800">
+            <Button
+              type="button"
+              onClick={() => setInspectSubmission(null)}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-900 text-sm font-bold rounded-xl transition-all"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

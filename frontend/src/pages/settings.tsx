@@ -8,8 +8,6 @@ import {
   Settings,
   LogOut,
   Lock,
-  Eye,
-  EyeOff,
   Copy,
   Check,
   RefreshCw,
