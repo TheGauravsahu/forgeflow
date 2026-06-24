@@ -8,16 +8,8 @@ import {
   Settings,
   LogOut,
   Lock,
-  Copy,
-  Check,
-  RefreshCw,
-  Bell,
-  Sliders,
-  Webhook,
-  Key,
   CheckCircle2,
   AlertTriangle,
-  Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function SettingsPage() {
@@ -40,17 +31,9 @@ export default function SettingsPage() {
   const [securitySuccess, setSecuritySuccess] = useState('');
   const [securityError, setSecurityError] = useState('');
 
-  // Preference Settings State
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [submissionNotif, setSubmissionNotif] = useState(true);
-  const [autoSave, setAutoSave] = useState(true);
-  const [prefSuccess, setPrefSuccess] = useState('');
 
-  // API Settings State
-  const [apiKey, setApiKey] = useState('ff_live_58c27a93fde1188364e7c10b42');
-  const [copiedKey, setCopiedKey] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [webhookSuccess, setWebhookSuccess] = useState('');
+
+
 
   // Load User details
   useEffect(() => {
@@ -105,32 +88,6 @@ export default function SettingsPage() {
     });
   };
 
-  const handleSavePreferences = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPrefSuccess('Preferences saved successfully!');
-    setTimeout(() => setPrefSuccess(''), 2000);
-  };
-
-  const handleWebhookSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setWebhookSuccess('Webhook configurations updated!');
-    setTimeout(() => setWebhookSuccess(''), 2000);
-  };
-
-  const handleCopyKey = () => {
-    navigator.clipboard.writeText(apiKey);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2000);
-  };
-
-  const handleRegenerateKey = () => {
-    const randHex = Array.from({ length: 24 }, () =>
-      Math.floor(Math.random() * 16).toString(16)
-    ).join('');
-    setApiKey(`ff_live_${randHex}`);
-    setWebhookSuccess('New API secret key generated.');
-    setTimeout(() => setWebhookSuccess(''), 2000);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('forgeflow_token');
