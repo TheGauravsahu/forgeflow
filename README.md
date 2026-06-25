@@ -11,9 +11,9 @@ ForgeFlow is a modern, developer-friendly, and open-source **Form Builder & Real
 - 📜 **Schema Versioning**: Automatically tracks version history for form changes.
 - 📊 **Real-time Analytics**: Interactive dashboard displaying total submissions, average responses per day, completion rate, and timeline trends.
 - 📥 **CSV Export**: Direct, authenticated download of submission data in clean CSV format.
-- 🔐 **Secure Auth**: Built-in authentication (Register, Login, JWT verification).
-- 🔌 **Fully Typed API (tRPC)**: Type-safe client-server communication using tRPC.
-- 📄 **OpenAPI Spec & Interactive Docs**: Fully interactive API documentation powered by `trpc-openapi` and Scalar API reference.
+- 🔐 **Secure Auth & Role Guards**: Built-in authentication (Register, Login, JWT verification, and database-driven User Role checks for secure Admin protection).
+- 🔌 **State Management**: Robust state management and server state synchronization powered by TanStack Query (React Query).
+- 🛡️ **Admin Panel**: Monitor registration velocity, system health checks (Neon DB, Gemini 2.5 API), and manage platform users directory.
 
 ---
 
@@ -23,16 +23,15 @@ ForgeFlow is a modern, developer-friendly, and open-source **Form Builder & Real
 - **Framework**: React 18 with TypeScript & Vite
 - **Styling**: TailwindCSS & shadcn/ui components
 - **Routing**: React Router DOM
-- **State Management & Fetching**: tRPC React Client & TanStack Query (React Query)
+- **State Management & Fetching**: Axios & TanStack Query (React Query)
 - **Icons**: Lucide React
 
 ### Backend
 - **Runtime**: Node.js with Express & TypeScript
 - **Database ORM**: Prisma Client
 - **Database**: PostgreSQL (compatible with Neon PostgreSQL, AWS RDS, Local, etc.)
-- **API Protocol**: tRPC & OpenAPI REST wrapper via `trpc-openapi`
-- **Security**: JWT & bcryptjs for password hashing
-- **Interactive Documentation**: Scalar API Reference (available at `/docs`)
+- **API Protocol**: RESTful API
+- **Security**: JWT & bcryptjs for password hashing, rate limiting, and CORS controls
 
 ---
 
@@ -141,11 +140,8 @@ The frontend client will run on `http://localhost:5173`. Open it in your browser
 
 ## 📘 API Reference Documentation
 
-ForgeFlow automatically generates and serves interactive Scalar API documentation.
-1. Make sure the backend server is running.
-2. Visit `http://localhost:3001/docs` in your browser.
-3. You can review all endpoints, types, parameters, schemas, and test queries directly from the dashboard!
-4. The raw OpenAPI 3.0 specification JSON is served at `http://localhost:3001/openapi.json`.
+The ForgeFlow backend serves a standard JSON REST API. 
+* For full API endpoint documentation, parameter requirements, authentication procedures, and folder structures, please refer to the detailed [Backend API Documentation](file:///c:/Users/Ishika%20Sahu/Documents/Programming/forgeflow/backend/README.md).
 
 ---
 
