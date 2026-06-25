@@ -78,6 +78,7 @@ interface FormCanvasProps {
   removeField: (id: string, e: React.MouseEvent) => void;
   sensors: any;
   handleDragEnd: (event: DragEndEvent) => void;
+  deviceView?: 'desktop' | 'mobile';
 }
 
 export function FormCanvas({
@@ -86,7 +87,8 @@ export function FormCanvas({
   setSelectedFieldId,
   removeField,
   sensors,
-  handleDragEnd
+  handleDragEnd,
+  deviceView = 'desktop'
 }: FormCanvasProps) {
 
   const renderCanvasFieldPreview = (field: FormField) => {
@@ -137,10 +139,18 @@ export function FormCanvas({
     }
   };
 
+  const isMobileView = deviceView === 'mobile';
+
   return (
     <main className="flex-1 bg-[#09090b] flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-2xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto p-8 flex justify-center items-start">
+        <div className={isMobileView ? "max-w-[375px] w-full border-[10px] border-zinc-800 rounded-[36px] bg-zinc-950 px-4 py-8 shadow-2xl relative min-h-[667px] transition-all duration-300 mx-auto" : "max-w-2xl w-full transition-all duration-300 mx-auto"}>
+          {isMobileView && (
+            <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-zinc-800 rounded-full flex items-center justify-center">
+              <span className="w-2 h-2 bg-zinc-900 rounded-full mr-2" />
+              <span className="w-8 h-1 bg-zinc-900 rounded-full" />
+            </div>
+          )}
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
               {fields.length === 0 ? (

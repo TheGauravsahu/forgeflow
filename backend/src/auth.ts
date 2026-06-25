@@ -14,6 +14,7 @@ export function verifyPassword(password: string, hash: string): boolean {
 export interface UserSessionPayload {
   userId: string;
   email: string;
+  role: string;
 }
 
 export function generateToken(payload: UserSessionPayload): string {

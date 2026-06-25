@@ -55,7 +55,10 @@ import {
   FileText,
   EyeOff,
   Zap,
-  Loader2
+  Loader2,
+  Laptop,
+  Smartphone,
+  History
 } from 'lucide-react';
 
 interface PaletteItem {
@@ -120,7 +123,9 @@ export default function BuilderPage() {
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [formTitle, setFormTitle] = useState('My Custom Form');
+  const [deviceView, setDeviceView] = useState<'desktop' | 'mobile'>('desktop');
   const [formDesc, setFormDesc] = useState('');
   const [formPublished, setFormPublished] = useState(false);
   const [formSettings, setFormSettings] = useState({
@@ -143,7 +148,18 @@ export default function BuilderPage() {
       setFormTitle(query.data.title);
       setFormDesc(query.data.description || '');
       setFormPublished(query.data.published);
-      if (query.data.settings) setFormSettings(query.data.settings as any);
+      if (query.data.settings) {
+        const incoming = query.data.settings as any;
+        setFormSettings({
+          successMessage: incoming.successMessage || 'Thank you! Your submission has been received.',
+          theme: {
+            primaryColor: incoming.theme?.primaryColor || '#f59e0b',
+            backgroundColor: incoming.theme?.backgroundColor || '#ffffff',
+            borderRadius: incoming.theme?.borderRadius || '0.5rem',
+            fontFamily: incoming.theme?.fontFamily || 'Plus Jakarta Sans'
+          }
+        });
+      }
       setIsLoaded(true);
     }
   }, [query.data, isLoaded]);
@@ -199,6 +215,24 @@ export default function BuilderPage() {
       setAiThemeError(msg);
     } finally {
       setIsGeneratingTheme(false);
+    }
+  };
+
+  // Version History queries & mutations
+  const versionsQuery = api.form.listVersions.useQuery({ id: formId }, { enabled: isHistoryOpen });
+  const rollbackVersionMutation = api.form.rollbackVersion.useMutation();
+
+  const handleRollback = async (versionId: string) => {
+    try {
+      await rollbackVersionMutation.mutateAsync({ id: formId, versionId });
+      toast.success('Form schema rolled back successfully.', 'Version Restored');
+      // Refetch form spec to update canvas
+      query.refetch();
+      versionsQuery.refetch();
+      setIsHistoryOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Failed to rollback version.', 'Rollback Failed');
     }
   };
 
@@ -332,6 +366,40 @@ export default function BuilderPage() {
             Properties
           </Button>
 
+          {/* Device view switcher */}
+          <div className="hidden sm:flex items-center bg-surface-800 border border-surface-700 rounded-lg p-0.5 mr-2">
+            <button
+              onClick={() => setDeviceView('desktop')}
+              className={`p-1.5 rounded-md transition-colors cursor-pointer border-0 bg-transparent ${
+                deviceView === 'desktop' ? 'bg-brand-500 text-surface-950 font-bold' : 'text-surface-400 hover:text-white'
+              }`}
+              title="Desktop view"
+            >
+              <Laptop className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setDeviceView('mobile')}
+              className={`p-1.5 rounded-md transition-colors cursor-pointer border-0 bg-transparent ${
+                deviceView === 'mobile' ? 'bg-brand-500 text-surface-950 font-bold' : 'text-surface-400 hover:text-white'
+              }`}
+              title="Mobile view"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            className={`text-xs border-surface-700 gap-1.5 cursor-pointer ${
+              isHistoryOpen ? 'bg-brand-500 text-surface-950 font-bold' : 'bg-surface-800 hover:bg-surface-700 text-surface-200'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            History
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -380,6 +448,7 @@ export default function BuilderPage() {
           removeField={removeField}
           sensors={sensors}
           handleDragEnd={handleDragEnd}
+          deviceView={deviceView}
         />
 
         <PropertiesPanel
@@ -403,6 +472,70 @@ export default function BuilderPage() {
         handleGenerateThemeAI={handleGenerateThemeAI}
         aiThemeError={aiThemeError}
       />
+
+      {/* ─── VERSION HISTORY DRAWER ────────────────────────────────────────── */}
+      {isHistoryOpen && (
+        <div className="fixed inset-y-0 right-0 w-80 bg-surface-900 border-l border-surface-800 shadow-2xl z-50 flex flex-col transition-all">
+          <div className="p-4 border-b border-surface-800 flex items-center justify-between">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              <History className="w-4 h-4 text-brand-400" />
+              Version History
+            </h3>
+            <button
+              onClick={() => setIsHistoryOpen(false)}
+              className="text-xs text-surface-400 hover:text-white cursor-pointer bg-transparent border-0"
+            >
+              Close
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {versionsQuery.isLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-5 h-5 animate-spin text-brand-400" />
+              </div>
+            ) : versionsQuery.data && versionsQuery.data.length > 0 ? (
+              versionsQuery.data.map((ver: any, index: number) => {
+                const dateStr = new Date(ver.createdAt).toLocaleString();
+                const isCurrent = index === 0;
+                return (
+                  <div
+                    key={ver.id}
+                    className={`p-3 rounded-lg border transition-all ${
+                      isCurrent
+                        ? 'border-brand-500 bg-brand-500/5'
+                        : 'border-surface-800 bg-surface-950/40 hover:border-surface-700'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-bold text-white">Version {ver.version}</span>
+                      {isCurrent && (
+                        <span className="text-[9px] font-bold bg-brand-500 text-surface-950 px-1.5 py-0.5 rounded">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-surface-500 block mb-2">{dateStr}</span>
+                    <div className="flex justify-between items-center text-[10px] text-surface-400">
+                      <span>{ver.schema ? `${ver.schema.length} fields` : '0 fields'}</span>
+                      {!isCurrent && (
+                        <button
+                          disabled={rollbackVersionMutation.isLoading}
+                          onClick={() => handleRollback(ver.id)}
+                          className="px-2 py-1 bg-surface-800 hover:bg-brand-500 hover:text-surface-950 font-bold rounded text-[9px] transition-colors cursor-pointer border-0"
+                        >
+                          Rollback
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-xs text-surface-500 text-center py-10">No version history found.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

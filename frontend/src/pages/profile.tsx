@@ -10,7 +10,8 @@ import {
   Layers,
   Inbox,
   Menu,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,13 +27,41 @@ export default function ProfilePage() {
   const [token, setToken] = useState<string | null>(null);
 
   // Profile Form State
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('forgeflow_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        return u.name || '';
+      }
+    } catch (_) {}
+    return '';
+  });
+  const [email, setEmail] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('forgeflow_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        return u.email || '';
+      }
+    } catch (_) {}
+    return '';
+  });
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   // Responsiveness State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('forgeflow_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        return !!u.isAdmin || u.role === 'ADMIN';
+      }
+    } catch (_) {}
+    return false;
+  });
 
   const toast = useToastStore();
 
@@ -52,6 +81,7 @@ export default function ProfilePage() {
     onSuccess: (data: any) => {
       setName(data.name || '');
       setEmail(data.email || '');
+      setIsAdmin(!!data.isAdmin || data.role === 'ADMIN');
     }
   });
 
@@ -170,11 +200,21 @@ export default function ProfilePage() {
 
           <button
             onClick={() => navigate('/settings')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all cursor-pointer border-0 bg-transparent text-left"
           >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
           </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all cursor-pointer border-0 bg-transparent text-left"
+            >
+              <ShieldCheck className="w-4 h-4 text-zinc-500" />
+              <span>Admin Panel</span>
+            </button>
+          )}
         </div>
 
         {/* User Footer */}
@@ -187,7 +227,7 @@ export default function ProfilePage() {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate leading-tight">{name || 'Developer'}</p>
-              <p className="text-[10px] text-zinc-600 truncate">Creator</p>
+              <p className="text-[10px] text-zinc-600 truncate">{isAdmin ? 'Admin' : 'Creator'}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -273,6 +313,19 @@ export default function ProfilePage() {
             <Settings className="w-4 h-4" />
             <span>Settings</span>
           </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => {
+                navigate('/admin');
+                setIsMobileSidebarOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all border-0 bg-transparent cursor-pointer text-left"
+            >
+              <ShieldCheck className="w-4 h-4 text-zinc-500" />
+              <span>Admin Panel</span>
+            </button>
+          )}
         </div>
 
         {/* User Footer */}
@@ -285,7 +338,7 @@ export default function ProfilePage() {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate leading-tight">{name || 'Developer'}</p>
-              <p className="text-[10px] text-zinc-600 truncate">Creator</p>
+              <p className="text-[10px] text-zinc-600 truncate">{isAdmin ? 'Admin' : 'Creator'}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -338,8 +391,17 @@ export default function ProfilePage() {
                     <h3 className="text-lg font-bold text-white leading-tight">{name}</h3>
                     <p className="text-xs text-zinc-500 mt-1 truncate max-w-full">{email}</p>
                     <div className="mt-4 flex items-center gap-1.5 px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-brand-500 text-xs font-semibold rounded-full">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Creator Tier
+                      {isAdmin ? (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          Admin Tier
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Creator Tier
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

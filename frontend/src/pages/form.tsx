@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -129,6 +129,47 @@ export default function PublicFormPage() {
 
   const formValues = watch();
 
+  // Offline Draft support
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  useEffect(() => {
+    if (form && !draftLoaded) {
+      try {
+        const savedDraft = localStorage.getItem(`forgeflow_draft_${formId}`);
+        if (savedDraft) {
+          const parsed = JSON.parse(savedDraft);
+          Object.keys(parsed).forEach(key => {
+            setValue(key, parsed[key]);
+          });
+          toast.success('Your previously saved draft has been loaded.', 'Draft Restored');
+        }
+      } catch (e) {
+        console.error('Failed to load draft:', e);
+      }
+      setDraftLoaded(true);
+    }
+  }, [form, formId, setValue, draftLoaded, toast]);
+
+  useEffect(() => {
+    if (!draftLoaded || !form) return;
+    const timer = setTimeout(() => {
+      try {
+        const activeValues: Record<string, any> = {};
+        Object.keys(formValues).forEach(key => {
+          if (formValues[key] !== undefined && formValues[key] !== null && formValues[key] !== '') {
+            activeValues[key] = formValues[key];
+          }
+        });
+        if (Object.keys(activeValues).length > 0) {
+          localStorage.setItem(`forgeflow_draft_${formId}`, JSON.stringify(activeValues));
+        }
+      } catch (e) {
+        console.error('Failed to autosave draft:', e);
+      }
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [formValues, formId, draftLoaded, form]);
+
   const handleFileUpload = (fieldId: string, file: File | null) => {
     if (!file) {
       setValue(fieldId, '');
@@ -160,6 +201,9 @@ export default function PublicFormPage() {
         honeypot
       });
       toast.success('Your answers have been submitted successfully.', 'Submission Received');
+      try {
+        localStorage.removeItem(`forgeflow_draft_${formId}`);
+      } catch (_) {}
       setSubmitted(true);
     } catch (err: any) {
       toast.error(err.message || 'Submission failed. Please try again.', 'Submission Error');
@@ -216,7 +260,12 @@ export default function PublicFormPage() {
     }
   };
 
-  const { theme } = settings;
+  const theme = settings.theme || {
+    primaryColor: '#6366f1',
+    backgroundColor: '#ffffff',
+    borderRadius: '0.5rem',
+    fontFamily: 'Inter'
+  };
 
   const primaryColor = theme.primaryColor || '#6366f1';
   const borderRadius = theme.borderRadius || '0.75rem';
@@ -286,15 +335,46 @@ export default function PublicFormPage() {
           <div className="p-8 sm:p-10 space-y-8">
 
             {/* ── Form Header ── */}
-            <div className="space-y-2">
-              <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight leading-tight">
-                {form.title}
-              </h1>
-              {form.description && (
-                <p className="text-stone-500 text-sm leading-relaxed whitespace-pre-wrap">
-                  {form.description}
-                </p>
-              )}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight leading-tight">
+                  {form.title}
+                </h1>
+                {form.description && (
+                  <p className="text-stone-500 text-sm leading-relaxed whitespace-pre-wrap">
+                    {form.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              {(() => {
+                const totalInputs = fields.filter(f => !['heading', 'divider', 'markdown', 'richtext', 'hidden'].includes(f.type));
+                const filledInputsCount = totalInputs.filter(field => {
+                  const val = formValues[field.id];
+                  return val !== undefined && val !== null && val !== '' && (Array.isArray(val) ? val.length > 0 : true);
+                }).length;
+                const progressPercent = totalInputs.length > 0 ? Math.round((filledInputsCount / totalInputs.length) * 100) : 0;
+                
+                if (totalInputs.length === 0) return null;
+                return (
+                  <div className="space-y-1.5 pt-2">
+                    <div className="flex justify-between items-center text-xs font-semibold text-stone-500">
+                      <span>Form Completion Progress</span>
+                      <span>{progressPercent}% Complete</span>
+                    </div>
+                    <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full transition-all duration-500 ease-out"
+                        style={{
+                          width: `${progressPercent}%`,
+                          backgroundColor: primaryColor
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="border-t border-stone-100" />
@@ -407,12 +487,12 @@ export default function PublicFormPage() {
                 </div>
               )}
 
-              {/* ── Submit button ── */}
-              <div className="pt-8">
+              {/* ── Submit & Save Buttons ── */}
+              <div className="pt-8 flex flex-col sm:flex-row gap-3">
                 <button
                   type="submit"
                   disabled={submitMutation.isLoading}
-                  className="w-full flex justify-center items-center gap-2 text-white px-6 py-3.5 font-semibold text-sm rounded-xl shadow-md hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 flex justify-center items-center gap-2 text-white px-6 py-3.5 font-semibold text-sm rounded-xl shadow-md hover:opacity-90 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   style={primaryBtnStyle}
                 >
                   {submitMutation.isLoading ? (
@@ -423,6 +503,26 @@ export default function PublicFormPage() {
                   ) : (
                     'Submit Response'
                   )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      const activeValues: Record<string, any> = {};
+                      Object.keys(formValues).forEach(key => {
+                        if (formValues[key] !== undefined && formValues[key] !== null && formValues[key] !== '') {
+                          activeValues[key] = formValues[key];
+                        }
+                      });
+                      localStorage.setItem(`forgeflow_draft_${formId}`, JSON.stringify(activeValues));
+                      toast.success('Your progress has been saved locally. You can resume it at any time.', 'Draft Saved');
+                    } catch (e) {
+                      toast.error('Failed to save progress locally.', 'Draft Failed');
+                    }
+                  }}
+                  className="px-6 py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-sm rounded-xl transition-all border border-stone-200 cursor-pointer"
+                >
+                  Save & Resume Later
                 </button>
               </div>
             </form>

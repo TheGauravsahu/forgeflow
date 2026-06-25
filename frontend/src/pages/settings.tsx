@@ -5,6 +5,7 @@ import {
   User,
   Settings,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const activeTheme = useThemeStore((state) => state.activeTheme);
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState('Developer');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Load User details
   useEffect(() => {
@@ -32,6 +34,7 @@ export default function SettingsPage() {
         try {
           const u = JSON.parse(savedUser);
           setUserName(u.name || 'Developer');
+          setIsAdmin(!!u.isAdmin || u.role === 'ADMIN');
         } catch (_) {}
       }
     }
@@ -100,11 +103,21 @@ export default function SettingsPage() {
 
           <button
             onClick={() => navigate('/settings')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-brand-500/15 text-brand-500 border border-brand-500/20 transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium bg-brand-500/15 text-brand-500 border border-brand-500/20 transition-all cursor-pointer border-0 bg-transparent text-left"
           >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
           </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-all cursor-pointer border-0 bg-transparent text-left"
+            >
+              <ShieldCheck className="w-4 h-4 text-zinc-500" />
+              <span>Admin Panel</span>
+            </button>
+          )}
         </div>
 
         {/* User Footer */}
@@ -117,7 +130,7 @@ export default function SettingsPage() {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate leading-tight">{userName}</p>
-              <p className="text-[10px] text-zinc-600 truncate">Creator</p>
+              <p className="text-[10px] text-zinc-600 truncate">{isAdmin ? 'Admin' : 'Creator'}</p>
             </div>
             <button
               onClick={handleLogout}

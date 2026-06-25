@@ -12,6 +12,7 @@ import { formsRouter } from './routes/forms';
 import { foldersRouter } from './routes/folders';
 import { submissionsRouter } from './routes/submissions';
 import { aiRouter } from './routes/ai';
+import { adminRouter } from './routes/admin';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/forms', formsRouter);
 app.use('/api/folders', foldersRouter);
 app.use('/api/submissions', submissionsRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/admin', adminRouter);
 
 // Direct CSV Export Endpoint (remains under forms namespace or top-level)
 app.get('/api/forms/:formId/export-csv', async (req, res) => {

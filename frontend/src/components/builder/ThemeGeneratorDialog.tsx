@@ -43,14 +43,14 @@ export function ThemeGeneratorDialog({
             <div className="flex gap-3 items-center">
               <input
                 type="color"
-                value={formSettings.theme.primaryColor || '#f59e0b'}
-                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...formSettings.theme, primaryColor: e.target.value } })}
+                value={formSettings?.theme?.primaryColor || '#f59e0b'}
+                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...(formSettings?.theme || {}), primaryColor: e.target.value } })}
                 className="w-10 h-9 bg-transparent border border-surface-700 rounded-lg cursor-pointer"
               />
               <input
                 type="text"
-                value={formSettings.theme.primaryColor || '#f59e0b'}
-                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...formSettings.theme, primaryColor: e.target.value } })}
+                value={formSettings?.theme?.primaryColor || '#f59e0b'}
+                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...(formSettings?.theme || {}), primaryColor: e.target.value } })}
                 className="flex-1 px-3 py-1.5 bg-surface-950 border border-surface-700 text-sm text-white rounded-lg focus:outline-none"
               />
             </div>
@@ -61,14 +61,14 @@ export function ThemeGeneratorDialog({
             <div className="flex gap-3 items-center">
               <input
                 type="color"
-                value={formSettings.theme.backgroundColor || '#ffffff'}
-                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...formSettings.theme, backgroundColor: e.target.value } })}
+                value={formSettings?.theme?.backgroundColor || '#ffffff'}
+                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...(formSettings?.theme || {}), backgroundColor: e.target.value } })}
                 className="w-10 h-9 bg-transparent border border-surface-700 rounded-lg cursor-pointer"
               />
               <input
                 type="text"
-                value={formSettings.theme.backgroundColor || '#ffffff'}
-                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...formSettings.theme, backgroundColor: e.target.value } })}
+                value={formSettings?.theme?.backgroundColor || '#ffffff'}
+                onChange={(e) => setFormSettings({ ...formSettings, theme: { ...(formSettings?.theme || {}), backgroundColor: e.target.value } })}
                 className="flex-1 px-3 py-1.5 bg-surface-950 border border-surface-700 text-sm text-white rounded-lg focus:outline-none"
               />
             </div>
@@ -77,8 +77,8 @@ export function ThemeGeneratorDialog({
           <div>
             <Label className="text-xs font-bold text-surface-400 uppercase tracking-widest mb-2 block">Border Radius</Label>
             <select
-              value={formSettings.theme.borderRadius || '0.5rem'}
-              onChange={(e) => setFormSettings({ ...formSettings, theme: { ...formSettings.theme, borderRadius: e.target.value } })}
+              value={formSettings?.theme?.borderRadius || '0.5rem'}
+              onChange={(e) => setFormSettings({ ...formSettings, theme: { ...(formSettings?.theme || {}), borderRadius: e.target.value } })}
               className="w-full bg-surface-950 border border-surface-700 text-white rounded-lg px-3.5 py-2 text-sm focus:outline-none"
             >
               <option value="0px">Sharp (0px)</option>

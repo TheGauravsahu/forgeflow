@@ -187,6 +187,25 @@ export const api = {
           ...options,
         });
       }
+    },
+    listVersions: {
+      useQuery: (input: { id: string }, options?: any) => {
+        return useQuery<any, any>({
+          queryKey: ["form.listVersions", input.id],
+          queryFn: () => request(`/forms/${input.id}/versions`),
+          ...options,
+        });
+      }
+    },
+    rollbackVersion: {
+      useMutation: (options?: any) => {
+        return useMutation<any, any, any>({
+          mutationFn: (input: { id: string; versionId: string }) => request(`/forms/${input.id}/versions/${input.versionId}/rollback`, {
+            method: "POST"
+          }),
+          ...options,
+        });
+      }
     }
   },
   submission: {
@@ -257,6 +276,27 @@ export const api = {
           mutationFn: (input: { formId: string }) => request("/ai/analyze-submissions", {
             method: "POST",
             body: JSON.stringify(input),
+          }),
+          ...options,
+        });
+      }
+    }
+  },
+  admin: {
+    getStats: {
+      useQuery: (_input?: any, options?: any) => {
+        return useQuery<any, any>({
+          queryKey: ["admin.getStats"],
+          queryFn: () => request("/admin/stats"),
+          ...options,
+        });
+      }
+    },
+    deleteUser: {
+      useMutation: (options?: any) => {
+        return useMutation<any, any, any>({
+          mutationFn: (input: { id: string }) => request(`/admin/users/${input.id}`, {
+            method: "DELETE",
           }),
           ...options,
         });

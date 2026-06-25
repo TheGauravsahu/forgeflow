@@ -4,11 +4,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from './components/Toaster';
 import { AuthGuard } from './components/AuthGuard';
+import { AdminGuard } from './components/AdminGuard';
 
 // Page imports
 import LandingPage from './pages/landing';
 import AuthPage from './pages/auth';
 import DashboardPage from './pages/dashboard';
+import AdminPage from './pages/admin';
 import BuilderPage from './pages/builder';
 import InsightsPage from './pages/insights';
 import PublicFormPage from './pages/form';
@@ -33,6 +35,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/dashboard" element={<AuthGuard><DashboardPage /></AuthGuard>} />
+            <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
             <Route path="/builder/:id" element={<AuthGuard><BuilderPage /></AuthGuard>} />
             <Route path="/insights/:id" element={<AuthGuard><InsightsPage /></AuthGuard>} />
             <Route path="/form/:id" element={<PublicFormPage />} />

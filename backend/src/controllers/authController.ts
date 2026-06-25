@@ -14,6 +14,11 @@ export const registerUser = async (req: AuthenticatedRequest, res: Response) => 
   const { email, password, name } = result.data;
 
   try {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail && email.toLowerCase() === adminEmail.toLowerCase()) {
+      return res.status(409).json({ error: 'An account with that email already exists.' });
+    }
+
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(409).json({ error: 'An account with that email already exists.' });
@@ -28,14 +33,16 @@ export const registerUser = async (req: AuthenticatedRequest, res: Response) => 
       }
     });
 
-    const token = generateToken({ userId: user.id, email: user.email });
+    const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
     return res.status(201).json({
       token,
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        role: user.role,
+        isAdmin: false
       }
     });
   } catch (error: any) {
@@ -53,6 +60,42 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
   const { email, password } = result.data;
 
   try {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (adminEmail && adminPassword && email.toLowerCase() === adminEmail.toLowerCase()) {
+      if (password !== adminPassword) {
+        return res.status(401).json({ error: 'Invalid email or password.' });
+      }
+      let user = await db.user.findUnique({ where: { email: adminEmail } });
+      if (!user) {
+        user = await db.user.create({
+          data: {
+            email: adminEmail,
+            passwordHash: hashPassword(adminPassword),
+            name: 'Admin User',
+            role: 'ADMIN'
+          }
+        });
+      } else if (user.role !== 'ADMIN') {
+        user = await db.user.update({
+          where: { id: user.id },
+          data: { role: 'ADMIN' }
+        });
+      }
+      const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+      return res.status(200).json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isAdmin: true
+        }
+      });
+    }
+
     const user = await db.user.findUnique({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -63,14 +106,16 @@ export const loginUser = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const token = generateToken({ userId: user.id, email: user.email });
+    const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
     return res.status(200).json({
       token,
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        role: user.role,
+        isAdmin: user.role === 'ADMIN'
       }
     });
   } catch (error: any) {
@@ -88,10 +133,13 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ error: 'User not found.' });
     }
 
+    const adminEmail = process.env.ADMIN_EMAIL;
     return res.status(200).json({
       id: user.id,
       email: user.email,
-      name: user.name
+      name: user.name,
+      role: user.role,
+      isAdmin: user.role === 'ADMIN'
     });
   } catch (error: any) {
     console.error('Fetch Current User Error:', error);

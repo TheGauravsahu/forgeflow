@@ -70,3 +70,11 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 }
+
+// Admin Authorization Middleware
+export function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user || req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Access denied. Administrator privileges required.' });
+  }
+  next();
+}

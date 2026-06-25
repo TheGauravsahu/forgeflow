@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/useToastStore';
 import { DashboardSidebar } from '../components/dashboard/DashboardSidebar';
@@ -26,7 +26,8 @@ import {
   Plus,
   FolderPlus,
   Check,
-  Code
+  Code,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,6 +55,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Developer');
 
@@ -87,6 +89,10 @@ export default function DashboardPage() {
   const [formToDeleteId, setFormToDeleteId] = useState<string | null>(null);
   const [folderToDeleteId, setFolderToDeleteId] = useState<string | null>(null);
 
+  // Section switcher & Admin states
+  const [currentSection, setCurrentSection] = useState<'forms' | 'marketplace' | 'admin'>('forms');
+  const [isAdmin, setIsAdmin] = useState(false);
+
   // Form Edit States (Rename, Move, Share)
   const [renameForm, setRenameForm] = useState<any | null>(null);
   const [renameTitle, setRenameTitle] = useState('');
@@ -95,6 +101,10 @@ export default function DashboardPage() {
   const [moveTargetFolderId, setMoveTargetFolderId] = useState<string | null>('root');
 
   const [shareForm, setShareForm] = useState<any | null>(null);
+
+  // Marketplace states (declared at top level to satisfy React Hook Rules)
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [marketplaceSearchVal, setMarketplaceSearchVal] = useState<string>('');
 
   // Authenticate Client-side
   useEffect(() => {
@@ -108,10 +118,33 @@ export default function DashboardPage() {
         try {
           const u = JSON.parse(savedUser);
           setUserName(u.name || 'Developer');
+          setIsAdmin(!!u.isAdmin);
         } catch (_) { }
       }
     }
   }, [navigate]);
+
+  // Sync state from location.state if navigated from admin
+  useEffect(() => {
+    if (location.state) {
+      const stateObj = location.state as any;
+      if (stateObj.section) {
+        setCurrentSection(stateObj.section);
+      }
+      if (stateObj.folderId !== undefined) {
+        setSelectedFolderId(stateObj.folderId);
+      }
+      if (stateObj.showArchived !== undefined) {
+        setShowArchived(stateObj.showArchived);
+      }
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (currentSection === 'admin' && !isAdmin && token) {
+      setCurrentSection('forms');
+    }
+  }, [currentSection, isAdmin, token]);
 
   // Queries & Mutations
   const toast = useToastStore();
@@ -337,11 +370,15 @@ export default function DashboardPage() {
     .toUpperCase()
     .slice(0, 2);
 
-  const currentSectionLabel = showArchived
-    ? 'Archived Forms'
-    : selectedFolderId
-      ? foldersQuery.data?.find((f) => f.id === selectedFolderId)?.name || 'Folder'
-      : 'All Forms';
+  const currentSectionLabel = currentSection === 'marketplace'
+    ? 'Templates Marketplace'
+    : currentSection === 'admin'
+      ? 'Admin Dashboard'
+      : showArchived
+        ? 'Archived Forms'
+        : selectedFolderId
+          ? foldersQuery.data?.find((f) => f.id === selectedFolderId)?.name || 'Folder'
+          : 'All Forms';
 
   // Client-side calculations for sorting & stats
   const activeForms = formsQuery.data ? formsQuery.data.filter((f) => !f.isArchived) : [];
@@ -384,6 +421,121 @@ export default function DashboardPage() {
     }));
   })();
 
+  const handleUseTemplateFromMarketplace = async (template: any) => {
+    try {
+      const form = await createFormMutation.mutateAsync({
+        title: template.title,
+        description: template.description || 'A form created from template',
+        schema: template.fields,
+        settings: template.settings || {
+          successMessage: 'Thank you! Your submission has been received.',
+          theme: {
+            primaryColor: '#6366f1',
+            backgroundColor: '#ffffff',
+            borderRadius: '0.5rem',
+            fontFamily: 'Inter'
+          }
+        }
+      });
+      navigate(`/builder/${form.id}`);
+      toast.success('Form layout imported from marketplace!', 'Template Imported');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to import template.', 'Import Error');
+    }
+  };
+
+  // Nested Templates Marketplace View
+  const renderMarketplace = () => {
+    const categories = ['all', 'feedback', 'registration', 'lead-gen', 'applications'];
+
+    const filteredTemplates = FORM_TEMPLATES.filter((t) => {
+      const matchesSearch = t.title.toLowerCase().includes(marketplaceSearchVal.toLowerCase()) || 
+                            t.description.toLowerCase().includes(marketplaceSearchVal.toLowerCase());
+      if (filterCategory === 'all') return matchesSearch;
+      
+      const categoryMap: Record<string, string> = {
+        'contact-form': 'feedback',
+        'event-registration': 'registration',
+        'newsletter-signup': 'lead-gen',
+        'job-application': 'applications',
+        'customer-satisfaction': 'feedback',
+        'product-feedback': 'feedback'
+      };
+      return categoryMap[t.id] === filterCategory && matchesSearch;
+    });
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Form Templates Marketplace</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Explore premium form templates crafted for surveys, conversion, and applications.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={marketplaceSearchVal}
+              onChange={(e) => setMarketplaceSearchVal(e.target.value)}
+              className="px-3.5 py-1.5 w-60 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500/60"
+            />
+          </div>
+        </div>
+
+        {/* Categories list */}
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilterCategory(cat)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all border-0 cursor-pointer ${
+                filterCategory === cat
+                  ? 'bg-amber-500 text-zinc-950 font-bold'
+                  : 'bg-zinc-900 text-zinc-400 hover:text-white'
+              }`}
+            >
+              {cat.replace('-', ' ')}
+            </button>
+          ))}
+        </div>
+
+        {/* Templates grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTemplates.map((t) => (
+            <Card
+              key={t.id}
+              className="bg-zinc-900/20 border-zinc-800/80 hover:border-amber-500/30 rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 flex flex-col justify-between"
+            >
+              <CardHeader className="p-5">
+                <div className="flex justify-between items-start">
+                  <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <Badge className="bg-zinc-950 border-zinc-800 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+                    {t.fields.length} Fields
+                  </Badge>
+                </div>
+                <CardTitle className="text-sm font-bold text-white mt-4">{t.title}</CardTitle>
+                <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed h-12 overflow-hidden">{t.description}</p>
+              </CardHeader>
+              <CardContent className="px-5 pb-5 pt-0 space-y-4">
+                <Separator className="bg-zinc-800/60" />
+                <Button
+                  onClick={() => handleUseTemplateFromMarketplace(t)}
+                  className="w-full bg-zinc-900 hover:bg-amber-500 hover:text-zinc-950 text-zinc-200 border border-zinc-800 hover:border-amber-500 font-semibold text-xs py-2 rounded-xl transition-all cursor-pointer"
+                >
+                  Use Template
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Note: renderAdminDashboard has been moved to its own dedicated page at src/pages/admin.tsx
+
   if (!token) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
@@ -415,6 +567,9 @@ export default function DashboardPage() {
         navigate={navigate}
         isMobileSidebarOpen={isMobileSidebarOpen}
         setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+        currentSection={currentSection}
+        setCurrentSection={setCurrentSection}
+        isAdmin={isAdmin}
       />
 
       {/* ─── MAIN CONTENT ─────────────────────────────────────────────────── */}
@@ -482,6 +637,14 @@ export default function DashboardPage() {
 
         {/* Content Scroll Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
+          {currentSection === 'marketplace' ? (
+            renderMarketplace()
+          ) : currentSection === 'admin' ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            </div>
+          ) : (
+            <>
 
           {/* ─── 1. OVERVIEW STATS & ACTIVITY CHART ───────────────────────────── */}
           {!formsQuery.isLoading && activeForms.length > 0 && !showArchived && (
@@ -999,6 +1162,8 @@ export default function DashboardPage() {
             )}
 
           </div>
+          </>
+          )}
         </div>
       </main>
 
@@ -1054,7 +1219,7 @@ export default function DashboardPage() {
                   />
                   <Button
                     onClick={() => handleCopyEmbedCode(shareForm.id)}
-                    className="self-end bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold transition-all text-xs px-4"
+                    className="self-end bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold transition-all text-xs px-4 cursor-pointer"
                   >
                     {copiedEmbedId === shareForm.id ? (
                       <span className="flex items-center gap-1">
@@ -1063,6 +1228,26 @@ export default function DashboardPage() {
                     ) : 'Copy Embed Code'}
                   </Button>
                 </div>
+              </div>
+
+              {/* QR Code */}
+              <div className="space-y-2 border-t border-zinc-800/80 pt-4 flex flex-col items-center">
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block self-start">Form QR Code</label>
+                <div className="bg-white p-3 rounded-2xl inline-block shadow-md">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/form/${shareForm.id}`)}`}
+                    alt="Form QR Code"
+                    className="w-[150px] h-[150px] block"
+                  />
+                </div>
+                <a
+                  href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(`${window.location.origin}/form/${shareForm.id}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-amber-500 hover:text-amber-400 hover:underline mt-1 font-medium"
+                >
+                  Download / Open High-Res QR Code
+                </a>
               </div>
 
             </div>

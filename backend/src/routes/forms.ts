@@ -7,7 +7,9 @@ import {
   getForm,
   updateForm,
   duplicateForm,
-  deleteForm
+  deleteForm,
+  listVersions,
+  rollbackVersion
 } from '../controllers/formController';
 
 const router = Router();
@@ -19,5 +21,7 @@ router.get('/:id', authenticateToken, getForm);
 router.put('/:id', authenticateToken, updateForm);
 router.post('/:id/duplicate', authenticateToken, duplicateForm);
 router.delete('/:id', authenticateToken, deleteForm);
+router.get('/:id/versions', authenticateToken, listVersions);
+router.post('/:id/versions/:versionId/rollback', authenticateToken, rollbackVersion);
 
 export const formsRouter: Router = router;

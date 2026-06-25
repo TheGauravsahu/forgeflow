@@ -193,7 +193,7 @@ export function DashboardDialogs({
                   />
                   <Button
                     onClick={() => handleCopyEmbedCode(shareForm.id)}
-                    className="self-end bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold transition-all text-xs px-4"
+                    className="self-end bg-amber-500 hover:bg-amber-400 text-zinc-900 font-bold transition-all text-xs px-4 cursor-pointer"
                   >
                     {copiedEmbedId === shareForm.id ? (
                       <span className="flex items-center gap-1">
@@ -202,6 +202,26 @@ export function DashboardDialogs({
                     ) : 'Copy Embed Code'}
                   </Button>
                 </div>
+              </div>
+
+              {/* QR Code */}
+              <div className="space-y-2 border-t border-zinc-800/80 pt-4 flex flex-col items-center">
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest block self-start">Form QR Code</label>
+                <div className="bg-white p-3 rounded-2xl inline-block shadow-md">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/form/${shareForm.id}`)}`}
+                    alt="Form QR Code"
+                    className="w-[150px] h-[150px] block"
+                  />
+                </div>
+                <a
+                  href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(`${window.location.origin}/form/${shareForm.id}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-amber-500 hover:text-amber-400 hover:underline mt-1 font-medium"
+                >
+                  Download / Open High-Res QR Code
+                </a>
               </div>
             </div>
           )}

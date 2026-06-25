@@ -364,3 +364,62 @@ export const deleteFolder = async (req: AuthenticatedRequest, res: Response) => 
     return res.status(500).json({ error: 'Internal server error.' });
   }
 };
+
+export const listVersions = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized.' });
+  const { id } = req.params;
+  try {
+    const form = await db.form.findFirst({
+      where: { id, userId: req.user.userId }
+    });
+    if (!form) return res.status(404).json({ error: 'Form not found.' });
+
+    const versions = await db.formVersion.findMany({
+      where: { formId: id },
+      orderBy: { version: 'desc' }
+    });
+    return res.status(200).json(versions);
+  } catch (error) {
+    console.error('List Versions Error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};
+
+export const rollbackVersion = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized.' });
+  const { id, versionId } = req.params;
+  try {
+    const form = await db.form.findFirst({
+      where: { id, userId: req.user.userId }
+    });
+    if (!form) return res.status(404).json({ error: 'Form not found.' });
+
+    const targetVersion = await db.formVersion.findFirst({
+      where: { id: versionId, formId: id }
+    });
+    if (!targetVersion) return res.status(404).json({ error: 'Version not found.' });
+
+    const updatedForm = await db.form.update({
+      where: { id },
+      data: { schema: targetVersion.schema as any }
+    });
+
+    const lastVersion = await db.formVersion.findFirst({
+      where: { formId: id },
+      orderBy: { version: 'desc' }
+    });
+    const nextVersionNumber = lastVersion ? lastVersion.version + 1 : 1;
+    await db.formVersion.create({
+      data: {
+        formId: id,
+        version: nextVersionNumber,
+        schema: targetVersion.schema as any
+      }
+    });
+
+    return res.status(200).json(updatedForm);
+  } catch (error) {
+    console.error('Rollback Version Error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};

@@ -20,6 +20,8 @@ import {
   Settings,
   LogOut,
   Menu,
+  Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import { AppLogo } from '@/components/ui/AppLogo';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -39,6 +41,9 @@ interface DashboardSidebarProps {
   navigate: (path: string) => void;
   isMobileSidebarOpen: boolean;
   setIsMobileSidebarOpen: (open: boolean) => void;
+  currentSection: 'forms' | 'marketplace' | 'admin';
+  setCurrentSection: (section: 'forms' | 'marketplace' | 'admin') => void;
+  isAdmin: boolean;
 }
 
 export function DashboardSidebar({
@@ -56,6 +61,9 @@ export function DashboardSidebar({
   navigate,
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
+  currentSection,
+  setCurrentSection,
+  isAdmin
 }: DashboardSidebarProps) {
   
   const activeTheme = useThemeStore((state) => state.activeTheme);
@@ -65,19 +73,51 @@ export function DashboardSidebar({
     const handleFolderClick = (id: string) => {
       setSelectedFolderId(id);
       setShowArchived(false);
+      setCurrentSection('forms');
       if (isMobile) setIsMobileSidebarOpen(false);
+      if (window.location.pathname !== '/dashboard') {
+        navigate('/dashboard');
+      }
     };
 
     const handleAllFormsClick = () => {
       setSelectedFolderId(null);
       setShowArchived(false);
+      setCurrentSection('forms');
       if (isMobile) setIsMobileSidebarOpen(false);
+      if (window.location.pathname !== '/dashboard') {
+        navigate('/dashboard');
+      }
+    };
+
+    const handleMarketplaceClick = () => {
+      setSelectedFolderId(null);
+      setShowArchived(false);
+      setCurrentSection('marketplace');
+      if (isMobile) setIsMobileSidebarOpen(false);
+      if (window.location.pathname !== '/dashboard') {
+        navigate('/dashboard');
+      }
+    };
+
+    const handleAdminClick = () => {
+      setSelectedFolderId(null);
+      setShowArchived(false);
+      setCurrentSection('admin');
+      if (isMobile) setIsMobileSidebarOpen(false);
+      if (window.location.pathname !== '/admin') {
+        navigate('/admin');
+      }
     };
 
     const handleArchivedClick = () => {
       setSelectedFolderId(null);
       setShowArchived(true);
+      setCurrentSection('forms');
       if (isMobile) setIsMobileSidebarOpen(false);
+      if (window.location.pathname !== '/dashboard') {
+        navigate('/dashboard');
+      }
     };
 
     return (
@@ -108,14 +148,14 @@ export function DashboardSidebar({
             <button
               onClick={handleAllFormsClick}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedFolderId === null && !showArchived
+                selectedFolderId === null && !showArchived && currentSection === 'forms'
                   ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
                   : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
               }`}
             >
               <LayoutGrid className="w-4 h-4 flex-shrink-0" />
               <span>All Forms</span>
-              {selectedFolderId === null && !showArchived && (
+              {selectedFolderId === null && !showArchived && currentSection === 'forms' && (
                 <span className="ml-auto text-[10px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">
                   {formsQuery.data?.length ?? 0}
                 </span>
@@ -123,9 +163,35 @@ export function DashboardSidebar({
             </button>
 
             <button
+              onClick={handleMarketplaceClick}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                currentSection === 'marketplace'
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                  : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 flex-shrink-0" />
+              <span>Marketplace</span>
+            </button>
+
+            {isAdmin && (
+              <button
+                onClick={handleAdminClick}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  currentSection === 'admin'
+                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                    : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                <span>Admin Panel</span>
+              </button>
+            )}
+
+            <button
               onClick={handleArchivedClick}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                showArchived
+                showArchived && currentSection === 'forms'
                   ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
                   : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
               }`}
@@ -224,7 +290,7 @@ export function DashboardSidebar({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate leading-tight">{userName}</p>
-                  <p className="text-[10px] text-zinc-600 truncate">Creator</p>
+                  <p className="text-[10px] text-zinc-600 truncate">{isAdmin ? 'Admin' : 'Creator'}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
